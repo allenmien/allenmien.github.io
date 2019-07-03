@@ -159,9 +159,9 @@ baidu_push: true
 menu:
   home: / || home
   #about: /about/ || user
+  archives: /archives/ || archive
   tags: /tags/ || tags
   categories: /categories/ || th
-  archives: /archives/ || archive
   #schedule: /schedule/ || calendar
   #sitemap: /sitemap.xml || sitemap
   #commonweal: /404/ || heartbeat
