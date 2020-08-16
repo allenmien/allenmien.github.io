@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="人工神经网络 根据目标，去帮你做特征工程 然后，做出了特征工程后，其实最后一层其实是一个简单的线性分类器  神经网络的来源  只有一层的神经网络，是和线性回归是一样的   添加少量的隐层，变成了浅层神经网络，也就是SNN  增加中间层，变为深度神经网络，也就是DNN    神经网络为什么在分类问题效果比较好原则上，神经网络是可以同时解决回归和分类问题的。只是回归类问题比较难做到高的准确度。 对于分">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深度学习中的人工神经网络">
+<meta property="og:url" content="https://shenmadaxia.com/2020/07/26/深度学习中的人工神经网络/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="人工神经网络 根据目标，去帮你做特征工程 然后，做出了特征工程后，其实最后一层其实是一个简单的线性分类器  神经网络的来源  只有一层的神经网络，是和线性回归是一样的   添加少量的隐层，变成了浅层神经网络，也就是SNN  增加中间层，变为深度神经网络，也就是DNN    神经网络为什么在分类问题效果比较好原则上，神经网络是可以同时解决回归和分类问题的。只是回归类问题比较难做到高的准确度。 对于分">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-132848.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-133051.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-135234.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-135554.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-141612.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-123717.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-145339.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-141612.png">
+<meta property="og:image" content="https://shenmadaxia.com/var/folders/zd/xt3vvjjx3bn0l5vwcjp4yszh0000gn/T/abnerworks.Typora/image-20180812230601902.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-153324.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-155453.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-155522.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-155541.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-153812.png">
+<meta property="og:image" content="https://shenmadaxia.com/var/folders/zd/xt3vvjjx3bn0l5vwcjp4yszh0000gn/T/abnerworks.Typora/image-20180812234752765.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-160731.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-161015.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-161105.png">
+<meta property="og:image" content="https://shenmadaxia.com/var/folders/zd/xt3vvjjx3bn0l5vwcjp4yszh0000gn/T/abnerworks.Typora/image-20180813001347884.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-161552.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_2_0.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_4_0.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-091135.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-091623.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-092159.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-092305.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_7_0.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_8_0.png">
+<meta property="og:updated_time" content="2020-07-26T07:14:12.331Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深度学习中的人工神经网络">
+<meta name="twitter:description" content="人工神经网络 根据目标，去帮你做特征工程 然后，做出了特征工程后，其实最后一层其实是一个简单的线性分类器  神经网络的来源  只有一层的神经网络，是和线性回归是一样的   添加少量的隐层，变成了浅层神经网络，也就是SNN  增加中间层，变为深度神经网络，也就是DNN    神经网络为什么在分类问题效果比较好原则上，神经网络是可以同时解决回归和分类问题的。只是回归类问题比较难做到高的准确度。 对于分">
+<meta name="twitter:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-132848.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/07/26/深度学习中的人工神经网络/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>深度学习中的人工神经网络 | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/07/26/深度学习中的人工神经网络/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">深度学习中的人工神经网络
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-07-26 15:14:12" itemprop="dateCreated datePublished" datetime="2020-07-26T15:14:12+08:00">2020-07-26</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="人工神经网络"><a href="#人工神经网络" class="headerlink" title="人工神经网络"></a>人工神经网络</h1><ul>
+<li>根据目标，去帮你做特征工程</li>
+<li>然后，做出了特征工程后，其实最后一层其实是一个简单的线性分类器</li>
+</ul>
+<h2 id="神经网络的来源"><a href="#神经网络的来源" class="headerlink" title="神经网络的来源"></a>神经网络的来源</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-132848.png" alt></p>
+<ul>
+<li><p>只有一层的神经网络，是和线性回归是一样的</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-133051.png" alt></p>
+</li>
+<li><p>添加少量的隐层，变成了浅层神经网络，也就是SNN<img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-135234.png" alt></p>
+</li>
+<li><p>增加中间层，变为深度神经网络，也就是DNN</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-135554.png" alt></p>
+</li>
+</ul>
+<h2 id="神经网络为什么在分类问题效果比较好"><a href="#神经网络为什么在分类问题效果比较好" class="headerlink" title="神经网络为什么在分类问题效果比较好"></a>神经网络为什么在分类问题效果比较好</h2><p>原则上，神经网络是可以同时解决回归和分类问题的。只是回归类问题比较难做到高的准确度。</p>
+<p>对于分类问题解决的比较好。</p>
+<p>当LR和SVM对于非线性可分，怎么处理呢？其实做好特征映射或者特征工程，其实也是可以做的。</p>
+<p>但是问题在于，你不知道特征映射怎么做。</p>
+<p>我们希望机器自己能够去构建一些特征，而不是人或者遍历等很大开销去做这个事情。</p>
+<p>例如下面：</p>
+<p>当一条直线很难去分隔这4个点时，我们可以尝试使用两条直线来分割这4个数据。其中两条直线之间的为一类，两条直线之外的为一类。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-141612.png" alt></p>
+<h2 id="神经网络理解"><a href="#神经网络理解" class="headerlink" title="神经网络理解"></a>神经网络理解</h2><ul>
+<li>两条线之间的交集，可以认为是一类。同样的，假如一条直线很难将数据集分来的话，我们可以构建很多条直线，并求交集，这样在这些交集内的就是一类，交集外的是另一类。</li>
+<li>那么直线的条数是多少呢，其实就是第一隐层的神经元数量。而由样本点连接第一隐层的线就待表对应的权重也就是参数。</li>
+<li>那么第二隐层做的是什么呢，他其实是把第一隐层划分出的分类，并集在一起。可以理解为第一隐层是交集，第二隐层的并集</li>
+<li>在进行计算是，每一个隐层的Loss Function都要经过一个sgmod函数的转化，得到Z值，而这个Z值是作为下一个隐层的输入进行的。</li>
+<li>而最终形成的决策边界是什么的，即是第一层隐层的w，b组成的很多条直线，而如果这些直线足够多，就形成了一条曲线，或者平面，或者等等的一个边界。</li>
+<li>最终的目标也就是通过反向传播和随机梯度下降的方法，不停的迭代，使得Loss Function小于一定的值，这样就代表收敛，也就是把样本库进行很好的分类的w和b已经求出，也就是这个模型已经求出。</li>
+<li>那么拿这个模型，对于新的数据，就可以根据这个分类器进行分类。</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-123717.png" alt></p>
+<ul>
+<li>线性的分类器做非线性的分割</li>
+</ul>
+<h3 id="神经元完成逻辑【与】"><a href="#神经元完成逻辑【与】" class="headerlink" title="神经元完成逻辑【与】"></a>神经元完成逻辑【与】</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-145339.png" alt></p>
+<p>对于下面的两个直线，可以有两组权重组成两个神经元，在P1和P2之间的即是我们想要的数据，也就是P1和P2两个神经元的交集。</p>
+<p>那么如何表示两个神经元的交集呢？如上面的逻辑与，我们可以对第一隐层的结果到输出层，设置权重z=20x1 + 20x2 -30  (此处只是假设参数是这样，代表肯定可以能够找到这样的一组数值来解释两个神经元之间的交集关系和交集结果  )</p>
+<p>也就是说，第一次的从输入层到隐层的权重和输入的（x1, x2）计算出的结果，来代表输入的0或1，第二次的从隐层到输出层的权重代表的是对0和1做交集。也就是说第一次的从输入层到隐层做的是模拟出两条直线，第二次的从隐层到输出层做的是描述出这两个直线的方向，也就是这两条直线范围之间的数据。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-07-141612.png" alt></p>
+<p><img src="/var/folders/zd/xt3vvjjx3bn0l5vwcjp4yszh0000gn/T/abnerworks.Typora/image-20180812230601902.png" alt></p>
+<h3 id="神经元完成逻辑【或】"><a href="#神经元完成逻辑【或】" class="headerlink" title="神经元完成逻辑【或】"></a>神经元完成逻辑【或】</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-153324.png" alt></p>
+<h3 id="神经元分类的解释"><a href="#神经元分类的解释" class="headerlink" title="神经元分类的解释"></a>神经元分类的解释</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-155453.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-155522.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-155541.jpg" alt></p>
+<h3 id="逻辑【与】和逻辑【或】的组合"><a href="#逻辑【与】和逻辑【或】的组合" class="headerlink" title="逻辑【与】和逻辑【或】的组合"></a>逻辑【与】和逻辑【或】的组合</h3><ul>
+<li>像每一个绿色，其实是多个线性分类器的与</li>
+<li>而多个绿色，其实是多个色块的或</li>
+<li>我觉得这样的就是上述的神经元再加一个隐层，也就是输入层，逻辑与隐层，逻辑或隐层，输出层</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-153812.png" alt></p>
+<p><img src="/var/folders/zd/xt3vvjjx3bn0l5vwcjp4yszh0000gn/T/abnerworks.Typora/image-20180812234752765.png" alt="image-20180812234752765"></p>
+<h2 id="神经网络的结构"><a href="#神经网络的结构" class="headerlink" title="神经网络的结构"></a>神经网络的结构</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-160731.png" alt></p>
+<h2 id="神经网络的激活函数"><a href="#神经网络的激活函数" class="headerlink" title="神经网络的激活函数"></a>神经网络的激活函数</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-161015.png" alt></p>
+<h2 id="神经网络之BP算法"><a href="#神经网络之BP算法" class="headerlink" title="神经网络之BP算法"></a>神经网络之BP算法</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-161105.png" alt></p>
+<p><img src="/var/folders/zd/xt3vvjjx3bn0l5vwcjp4yszh0000gn/T/abnerworks.Typora/image-20180813001347884.png" alt="image-20180813001347884"></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-161552.png" alt></p>
+<ul>
+<li>Loss Function：算出的结果和真实结果之间的差距</li>
+<li>目标是不断的缩小 Loss Function </li>
+<li>“正向传播”求损失，“反向传播”回传误差</li>
+<li>SGD：随机梯度下降。梯度下降是在全部的范围内找下降梯度最大的方向。而随机梯度下降只是找了一批的样本。</li>
+<li>如果使用梯度下降，由于不是一个凸函数，所以可能有多个局部最优解，使用梯度下降有可能在一个局部最优解里就出来了。</li>
+<li>因为随机梯度是找的随机的一批，并非全部，所以只是这一批的的局部下降最快的方向，所以有可能会跳出凸函数的局部最优解。</li>
+</ul>
+<h2 id="人工神经网络例子"><a href="#人工神经网络例子" class="headerlink" title="人工神经网络例子"></a>人工神经网络例子</h2><h2 id="先制造一批数据"><a href="#先制造一批数据" class="headerlink" title="先制造一批数据"></a>先制造一批数据</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_moons</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">plt.ion()</span><br><span class="line">np.random.seed()</span><br><span class="line">X, y = make_moons(<span class="number">200</span>, noise=<span class="number">0.20</span>)</span><br><span class="line">plt.scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], s=<span class="number">40</span>, c=y, cmap=plt.cm.Spectral)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_2_0.png" alt></p>
+<h2 id="使用传统的逻辑回归进行分类"><a href="#使用传统的逻辑回归进行分类" class="headerlink" title="使用传统的逻辑回归进行分类"></a>使用传统的逻辑回归进行分类</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> LogisticRegressionCV</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">plot_descision_boundary</span><span class="params">(pred_func)</span>:</span></span><br><span class="line">    <span class="comment">#设定最大最小值，附加一点点边缘填充</span></span><br><span class="line">    x_min, x_max = X[:, <span class="number">0</span>].min() - <span class="number">.5</span>, X[:, <span class="number">0</span>].max() + <span class="number">.5</span></span><br><span class="line">    y_min, y_max = X[:, <span class="number">1</span>].min() - <span class="number">.5</span>, X[:, <span class="number">1</span>].max() + <span class="number">.5</span></span><br><span class="line">    h = <span class="number">0.01</span></span><br><span class="line"></span><br><span class="line">    xx, yy = np.meshgrid(</span><br><span class="line">        np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))</span><br><span class="line">    <span class="comment"># 用预测函数预测一下</span></span><br><span class="line">    Z = pred_func(np.c_[xx.ravel(), yy.ravel()])</span><br><span class="line">    Z = Z.reshape(xx.shape)</span><br><span class="line"></span><br><span class="line">    <span class="comment">#画图</span></span><br><span class="line">    plt.contour(xx, yy, Z, cmap=plt.cm.Spectral)</span><br><span class="line">    plt.scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=y, cmap=plt.cm.Spectral)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 逻辑斯特回归的分类效果</span></span><br><span class="line">clf = LogisticRegressionCV()</span><br><span class="line">clf.fit(X, y)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 决策边界</span></span><br><span class="line">plot_descision_boundary(<span class="keyword">lambda</span> x: clf.predict(x))</span><br><span class="line">plt.title(<span class="string">"Logistic Regression"</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_4_0.png" alt></p>
+<h2 id="使用人工神经网络进行分类"><a href="#使用人工神经网络进行分类" class="headerlink" title="使用人工神经网络进行分类"></a>使用人工神经网络进行分类</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-091135.png" alt><br><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-091623.png" alt><br><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-092159.png" alt><br><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-092305.png" alt></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line">num_examples = len(X)</span><br><span class="line">nn_input_dim = <span class="number">2</span></span><br><span class="line">nn_output_dim = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 梯度下降参数</span></span><br><span class="line">epsilon = <span class="number">0.01</span></span><br><span class="line">reg_lambda = <span class="number">0.01</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义损失函数</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">calculate_loss</span><span class="params">(model)</span>:</span></span><br><span class="line">    W1, b1, W2, b2 = model[<span class="string">"W1"</span>], model[<span class="string">"b1"</span>], model[<span class="string">"W2"</span>], model[<span class="string">"b2"</span>]</span><br><span class="line">    <span class="comment"># 向前推进，前向运算</span></span><br><span class="line">    <span class="comment"># 第一个隐层</span></span><br><span class="line">    z1 = X.dot(W1) + b1</span><br><span class="line">    <span class="comment"># 激活函数</span></span><br><span class="line">    a1 = np.tanh(z1)</span><br><span class="line">    <span class="comment"># 第二个隐层</span></span><br><span class="line">    z2 = a1.dot(W2) + b2</span><br><span class="line">    <span class="comment"># 指数运算</span></span><br><span class="line">    exp_scores = np.exp(z2)</span><br><span class="line">    <span class="comment"># 概率</span></span><br><span class="line">    probs = exp_scores / np.sum(exp_scores, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">    <span class="comment"># 计算损失</span></span><br><span class="line">    corect_logprobs = -np.log(probs[range(num_examples), y])</span><br><span class="line">    data_loss = np.sum(corect_logprobs)</span><br><span class="line">    <span class="comment"># 正则化</span></span><br><span class="line">    data_loss += reg_lambda / <span class="number">2</span> * (np.square(W1) + np.sum(np.square(W2)))</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1.</span> / num_examples * data_loss</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 完整的训练建模函数定义</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">build_model</span><span class="params">(nn_hdim, num_passes=<span class="number">20000</span>, print_loss=False)</span>:</span></span><br><span class="line">    <span class="string">'''</span></span><br><span class="line"><span class="string">    参数：</span></span><br><span class="line"><span class="string">    1.nn_hdim:隐层节点个数</span></span><br><span class="line"><span class="string">    2.num_passes:梯度下降迭代次数</span></span><br><span class="line"><span class="string">    3.print_loss:设定为True的话，每1000次迭代输出一次loss的当前值</span></span><br><span class="line"><span class="string">    '''</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 随机初始化权重</span></span><br><span class="line">    np.random.seed(<span class="number">0</span>)</span><br><span class="line">    W1 = np.random.rand(nn_input_dim, nn_hdim) / np.sqrt(nn_input_dim)</span><br><span class="line">    b1 = np.zeros((<span class="number">1</span>, nn_hdim))</span><br><span class="line">    W2 = np.random.rand(nn_hdim, nn_output_dim) / np.sqrt(nn_hdim)</span><br><span class="line">    b2 = np.zeros((<span class="number">1</span>, nn_output_dim))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 最后学到的模型</span></span><br><span class="line">    model = &#123;&#125;</span><br><span class="line">    <span class="comment"># 开始梯度下降</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">0</span>, num_passes):</span><br><span class="line">        <span class="comment"># 向前计算loss</span></span><br><span class="line">        z1 = X.dot(W1) + b1</span><br><span class="line">        a1 = np.tanh(z1)</span><br><span class="line">        z2 = a1.dot(W2) + b2</span><br><span class="line">        exp_scores = np.exp(z2)</span><br><span class="line">        probs = exp_scores / np.sum(exp_scores, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 反向传播</span></span><br><span class="line">        delta3 = probs</span><br><span class="line">        delta3[range(num_examples), y] -= <span class="number">1</span></span><br><span class="line">        dW2 = (a1.T).dot(delta3)</span><br><span class="line">        db2 = np.sum(delta3, axis=<span class="number">0</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">        delta2 = delta3.dot(W2.T) * (<span class="number">1</span> - np.power(a1, <span class="number">2</span>))</span><br><span class="line">        dW1 = np.dot(X.T, delta2)</span><br><span class="line">        db1 = np.sum(delta2, axis=<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 加上正则化项</span></span><br><span class="line">        dW2 += reg_lambda * W2</span><br><span class="line">        dW1 += reg_lambda * W1</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 梯度下降更新参数</span></span><br><span class="line">        W1 += -epsilon * dW1</span><br><span class="line">        b1 += -epsilon * db1</span><br><span class="line">        W2 += -epsilon * dW2</span><br><span class="line">        b2 += -epsilon * db2</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 得到的模型其实是这些权重</span></span><br><span class="line">        model = &#123;<span class="string">'W1'</span>: W1, <span class="string">'b1'</span>: b1, <span class="string">'W2'</span>: W2, <span class="string">'b2'</span>: b2&#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 打印中间过程</span></span><br><span class="line">        <span class="comment"># if print_loss and i % 1000 == 0:</span></span><br><span class="line">        <span class="comment">#     print 'Loss after interation %i: %f' % (i, calculate_loss(model))</span></span><br><span class="line">    <span class="keyword">return</span> model</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义判定结果的函数</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">predict</span><span class="params">(model, x)</span>:</span></span><br><span class="line">    W1, b1, W2, b2 = model[<span class="string">'W1'</span>], model[<span class="string">'b1'</span>], model[<span class="string">'W2'</span>], model[<span class="string">'b2'</span>]</span><br><span class="line">    <span class="comment"># 前向运算</span></span><br><span class="line">    z1 = x.dot(W1) + b1</span><br><span class="line">    a1 = np.tanh(z1)</span><br><span class="line">    z2 = a1.dot(W2) + b2</span><br><span class="line">    exp_scores = np.exp(z2)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 计算概率输出最大概率对应的类别</span></span><br><span class="line">    probs = exp_scores / np.sum(exp_scores, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">    <span class="keyword">return</span> np.argmax(probs, axis=<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 建立3个隐层的神经网络</span></span><br><span class="line">model = build_model(<span class="number">3</span>, print_loss=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 画出决策/判定边界</span></span><br><span class="line">plot_descision_boundary(<span class="keyword">lambda</span> x: predict(model, x))</span><br><span class="line">plt.title(<span class="string">'Decision Boundary for hidden layer size 3'</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_7_0.png" alt></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 不同的隐层对结果的影响</span></span><br><span class="line">plt.figure(figsize=(<span class="number">16</span>, <span class="number">32</span>))</span><br><span class="line">hidden_layer_dimensions = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">20</span>, <span class="number">50</span>]</span><br><span class="line"><span class="keyword">for</span> i, nn_hdim <span class="keyword">in</span> enumerate(hidden_layer_dimensions):</span><br><span class="line">    plt.subplot(<span class="number">5</span>, <span class="number">2</span>, i + <span class="number">1</span>)</span><br><span class="line">    plt.title(<span class="string">'Hidden Layer size %d'</span> % nn_hdim)</span><br><span class="line">    model = build_model(nn_hdim)</span><br><span class="line">    plot_descision_boundary(<span class="keyword">lambda</span> x: predict(model, x))</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-12-output_8_0.png" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/26/深度学习中的卷积神经网络/" rel="next" title="深度学习中的卷积神经网络">
+                <i class="fa fa-chevron-left"></i> 深度学习中的卷积神经网络
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/07/26/序列模型与注意力机制/" rel="prev" title="吴恩达deep-learning序列模型-序列模型与注意力机制">
+                吴恩达deep-learning序列模型-序列模型与注意力机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#人工神经网络"><span class="nav-number">1.</span> <span class="nav-text">人工神经网络</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络的来源"><span class="nav-number">1.1.</span> <span class="nav-text">神经网络的来源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络为什么在分类问题效果比较好"><span class="nav-number">1.2.</span> <span class="nav-text">神经网络为什么在分类问题效果比较好</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络理解"><span class="nav-number">1.3.</span> <span class="nav-text">神经网络理解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#神经元完成逻辑【与】"><span class="nav-number">1.3.1.</span> <span class="nav-text">神经元完成逻辑【与】</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#神经元完成逻辑【或】"><span class="nav-number">1.3.2.</span> <span class="nav-text">神经元完成逻辑【或】</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#神经元分类的解释"><span class="nav-number">1.3.3.</span> <span class="nav-text">神经元分类的解释</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#逻辑【与】和逻辑【或】的组合"><span class="nav-number">1.3.4.</span> <span class="nav-text">逻辑【与】和逻辑【或】的组合</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络的结构"><span class="nav-number">1.4.</span> <span class="nav-text">神经网络的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络的激活函数"><span class="nav-number">1.5.</span> <span class="nav-text">神经网络的激活函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#神经网络之BP算法"><span class="nav-number">1.6.</span> <span class="nav-text">神经网络之BP算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#人工神经网络例子"><span class="nav-number">1.7.</span> <span class="nav-text">人工神经网络例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先制造一批数据"><span class="nav-number">1.8.</span> <span class="nav-text">先制造一批数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用传统的逻辑回归进行分类"><span class="nav-number">1.9.</span> <span class="nav-text">使用传统的逻辑回归进行分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用人工神经网络进行分类"><span class="nav-number">1.10.</span> <span class="nav-text">使用人工神经网络进行分类</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

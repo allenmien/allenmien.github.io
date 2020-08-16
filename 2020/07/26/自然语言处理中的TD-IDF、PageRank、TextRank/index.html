@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="TF-IDF、PageRank、TextRankTF-IDF什么是TF-IDF 字词的重要性随着它在文件中出现的次数成正比增加，但同时会随着它在语料库中出现的频率成反比下降。  词频 (term frequency, TF) 指的是某一个给定的词语在该文件中出现的次数。  逆向文件频率 (inverse document frequency, IDF)   TF-IDF   PageRank算法来">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自然语言处理中的TD-IDF、PageRank、TextRank">
+<meta property="og:url" content="https://shenmadaxia.com/2020/07/26/自然语言处理中的TD-IDF、PageRank、TextRank/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="TF-IDF、PageRank、TextRankTF-IDF什么是TF-IDF 字词的重要性随着它在文件中出现的次数成正比增加，但同时会随着它在语料库中出现的频率成反比下降。  词频 (term frequency, TF) 指的是某一个给定的词语在该文件中出现的次数。  逆向文件频率 (inverse document frequency, IDF)   TF-IDF   PageRank算法来">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/63738428.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/77978618.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/38449628.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/91855146.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/40788749.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/71459610.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/99304278.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/30640781.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/45854060.jpg">
+<meta property="og:updated_time" content="2020-07-26T07:14:12.332Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="自然语言处理中的TD-IDF、PageRank、TextRank">
+<meta name="twitter:description" content="TF-IDF、PageRank、TextRankTF-IDF什么是TF-IDF 字词的重要性随着它在文件中出现的次数成正比增加，但同时会随着它在语料库中出现的频率成反比下降。  词频 (term frequency, TF) 指的是某一个给定的词语在该文件中出现的次数。  逆向文件频率 (inverse document frequency, IDF)   TF-IDF   PageRank算法来">
+<meta name="twitter:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/63738428.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/07/26/自然语言处理中的TD-IDF、PageRank、TextRank/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>自然语言处理中的TD-IDF、PageRank、TextRank | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/07/26/自然语言处理中的TD-IDF、PageRank、TextRank/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">自然语言处理中的TD-IDF、PageRank、TextRank
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-07-26 15:14:12" itemprop="dateCreated datePublished" datetime="2020-07-26T15:14:12+08:00">2020-07-26</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="TF-IDF、PageRank、TextRank"><a href="#TF-IDF、PageRank、TextRank" class="headerlink" title="TF-IDF、PageRank、TextRank"></a>TF-IDF、PageRank、TextRank</h1><h2 id="TF-IDF"><a href="#TF-IDF" class="headerlink" title="TF-IDF"></a>TF-IDF</h2><h3 id="什么是TF-IDF"><a href="#什么是TF-IDF" class="headerlink" title="什么是TF-IDF"></a>什么是TF-IDF</h3><blockquote>
+<p>字词的重要性随着它在文件中出现的次数成正比增加，但同时会随着它在语料库中出现的频率成反比下降。</p>
+</blockquote>
+<p><strong>词频 (term frequency, TF)</strong> 指的是某一个给定的词语在该文件中出现的次数。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/63738428.jpg" alt></p>
+<p><strong>逆向文件频率 (inverse document frequency, IDF)</strong> </p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/77978618.jpg" alt></p>
+<p><strong>TF-IDF</strong></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/38449628.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/91855146.jpg" alt></p>
+<h2 id="PageRank"><a href="#PageRank" class="headerlink" title="PageRank"></a>PageRank</h2><h3 id="算法来源"><a href="#算法来源" class="headerlink" title="算法来源"></a>算法来源</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/40788749.jpg" alt></p>
+<h3 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a>算法原理</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/71459610.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/99304278.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/30640781.jpg" alt></p>
+<h3 id="算法实现"><a href="#算法实现" class="headerlink" title="算法实现"></a>算法实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*-coding:utf-8-*-</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">@Time   : 2018/7/25 9:23</span></span><br><span class="line"><span class="string">@Author : Mark</span></span><br><span class="line"><span class="string">@File   : page_rank.py</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> pygraph.classes.digraph <span class="keyword">import</span> digraph</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PRIterator</span>:</span></span><br><span class="line">    __doc__ = <span class="string">'''计算一张图中的PR值'''</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, dg)</span>:</span></span><br><span class="line">        self.damping_factor = <span class="number">0.85</span>  <span class="comment"># 阻尼系数,即α</span></span><br><span class="line">        self.max_iterations = <span class="number">100</span>  <span class="comment"># 最大迭代次数</span></span><br><span class="line">        self.min_delta = <span class="number">0.00001</span>  <span class="comment"># 确定迭代是否结束的参数,即ϵ</span></span><br><span class="line">        self.graph = dg</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">page_rank</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment">#  先将图中没有出链的节点改为对所有节点都有出链</span></span><br><span class="line">        <span class="keyword">for</span> node <span class="keyword">in</span> self.graph.nodes():</span><br><span class="line">            <span class="keyword">if</span> len(self.graph.neighbors(node)) == <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">for</span> node2 <span class="keyword">in</span> self.graph.nodes():</span><br><span class="line">                    digraph.add_edge(self.graph, (node, node2))</span><br><span class="line"></span><br><span class="line">        nodes = self.graph.nodes()</span><br><span class="line">        graph_size = len(nodes)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> graph_size == <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> &#123;&#125;</span><br><span class="line">        page_rank = dict.fromkeys(nodes, <span class="number">1.0</span> / graph_size)  <span class="comment"># 给每个节点赋予初始的PR值</span></span><br><span class="line">        damping_value = (</span><br><span class="line">                                <span class="number">1.0</span> - self.damping_factor) / graph_size  <span class="comment"># 公式中的(1−α)/N部分</span></span><br><span class="line"></span><br><span class="line">        flag = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> range(self.max_iterations):</span><br><span class="line">            change = <span class="number">0</span></span><br><span class="line">            <span class="keyword">for</span> node <span class="keyword">in</span> nodes:</span><br><span class="line">                rank = <span class="number">0</span></span><br><span class="line">                <span class="keyword">for</span> incident_page <span class="keyword">in</span> self.graph.incidents(node):  <span class="comment"># 遍历所有“入射”的页面</span></span><br><span class="line">                    rank += self.damping_factor * (</span><br><span class="line">                            page_rank[incident_page] / len(</span><br><span class="line">                        self.graph.neighbors(incident_page)))</span><br><span class="line">                rank += damping_value</span><br><span class="line">                change += abs(page_rank[node] - rank)  <span class="comment"># 绝对值</span></span><br><span class="line">                page_rank[node] = rank</span><br><span class="line"></span><br><span class="line">            print(<span class="string">"This is NO.%s iteration"</span> % (i + <span class="number">1</span>))</span><br><span class="line">            print(page_rank)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> change &lt; self.min_delta:</span><br><span class="line">                flag = <span class="literal">True</span></span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> flag:</span><br><span class="line">            print(<span class="string">"finished in %s iterations!"</span> % node)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            print(<span class="string">"finished out of 100 iterations!"</span>)</span><br><span class="line">        <span class="keyword">return</span> page_rank</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    dg = digraph()</span><br><span class="line"></span><br><span class="line">    dg.add_nodes([<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>, <span class="string">"E"</span>])</span><br><span class="line"></span><br><span class="line">    dg.add_edge((<span class="string">"A"</span>, <span class="string">"B"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"A"</span>, <span class="string">"C"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"A"</span>, <span class="string">"D"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"B"</span>, <span class="string">"D"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"C"</span>, <span class="string">"E"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"D"</span>, <span class="string">"E"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"B"</span>, <span class="string">"E"</span>))</span><br><span class="line">    dg.add_edge((<span class="string">"E"</span>, <span class="string">"A"</span>))</span><br><span class="line"></span><br><span class="line">    pr = PRIterator(dg)</span><br><span class="line">    page_ranks = pr.page_rank()</span><br><span class="line"></span><br><span class="line">    print(<span class="string">"The final page rank is\n"</span>, page_ranks)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">This <span class="keyword">is</span> NO<span class="number">.1</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2</span>, <span class="string">'C'</span>: <span class="number">0.08666666666666667</span>, <span class="string">'B'</span>: <span class="number">0.08666666666666667</span>, <span class="string">'E'</span>: <span class="number">0.31050000000000005</span>, <span class="string">'D'</span>: <span class="number">0.1235</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.2</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29392500000000005</span>, <span class="string">'C'</span>: <span class="number">0.11327875000000001</span>, <span class="string">'B'</span>: <span class="number">0.11327875000000001</span>, <span class="string">'E'</span>: <span class="number">0.27940540625</span>, <span class="string">'D'</span>: <span class="number">0.16142221875</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.3</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.26749459531249997</span>, <span class="string">'C'</span>: <span class="number">0.10579013533854167</span>, <span class="string">'B'</span>: <span class="number">0.10579013533854167</span>, <span class="string">'E'</span>: <span class="number">0.3020913084941407</span>, <span class="string">'D'</span>: <span class="number">0.15075094285742188</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.4</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2867776122200196</span>, <span class="string">'C'</span>: <span class="number">0.1112536567956722</span>, <span class="string">'B'</span>: <span class="number">0.1112536567956722</span>, <span class="string">'E'</span>: <span class="number">0.2999867138432907</span>, <span class="string">'D'</span>: <span class="number">0.1585364609338329</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.5</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2849887067667971</span>, <span class="string">'C'</span>: <span class="number">0.11074680025059253</span>, <span class="string">'B'</span>: <span class="number">0.11074680025059253</span>, <span class="string">'E'</span>: <span class="number">0.30595816211326343</span>, <span class="string">'D'</span>: <span class="number">0.15781419035709435</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.6</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29006443779627394</span>, <span class="string">'C'</span>: <span class="number">0.11218492404227762</span>, <span class="string">'B'</span>: <span class="number">0.11218492404227762</span>, <span class="string">'E'</span>: <span class="number">0.3071778399574342</span>, <span class="string">'D'</span>: <span class="number">0.1598635167602456</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.7</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2911011639638191</span>, <span class="string">'C'</span>: <span class="number">0.11247866312308208</span>, <span class="string">'B'</span>: <span class="number">0.11247866312308208</span>, <span class="string">'E'</span>: <span class="number">0.3092942847281384</span>, <span class="string">'D'</span>: <span class="number">0.16028209495039195</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.8</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2929001420189177</span>, <span class="string">'C'</span>: <span class="number">0.11298837357202668</span>, <span class="string">'B'</span>: <span class="number">0.11298837357202668</span>, <span class="string">'E'</span>: <span class="number">0.31029995701216717</span>, <span class="string">'D'</span>: <span class="number">0.161008432340138</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.9</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29375496346034213</span>, <span class="string">'C'</span>: <span class="number">0.11323057298043027</span>, <span class="string">'B'</span>: <span class="number">0.11323057298043027</span>, <span class="string">'E'</span>: <span class="number">0.31122614803916593</span>, <span class="string">'D'</span>: <span class="number">0.16135356649711313</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.10</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29454222583329104</span>, <span class="string">'C'</span>: <span class="number">0.11345363065276579</span>, <span class="string">'B'</span>: <span class="number">0.11345363065276579</span>, <span class="string">'E'</span>: <span class="number">0.3118039106048226</span>, <span class="string">'D'</span>: <span class="number">0.16167142368019125</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.11</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2950333240140992</span>, <span class="string">'C'</span>: <span class="number">0.1135927751373281</span>, <span class="string">'B'</span>: <span class="number">0.1135927751373281</span>, <span class="string">'E'</span>: <span class="number">0.3122514984282559</span>, <span class="string">'D'</span>: <span class="number">0.16186970457069255</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.12</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29541377366401755</span>, <span class="string">'C'</span>: <span class="number">0.11370056920480498</span>, <span class="string">'B'</span>: <span class="number">0.11370056920480498</span>, <span class="string">'E'</span>: <span class="number">0.312557474621215</span>, <span class="string">'D'</span>: <span class="number">0.1620233111168471</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.13</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2956738534280328</span>, <span class="string">'C'</span>: <span class="number">0.11377425847127598</span>, <span class="string">'B'</span>: <span class="number">0.11377425847127598</span>, <span class="string">'E'</span>: <span class="number">0.3127819940001969</span>, <span class="string">'D'</span>: <span class="number">0.16212831832156827</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.14</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29586469490016737</span>, <span class="string">'C'</span>: <span class="number">0.1138283302217141</span>, <span class="string">'B'</span>: <span class="number">0.1138283302217141</span>, <span class="string">'E'</span>: <span class="number">0.3129401916060185</span>, <span class="string">'D'</span>: <span class="number">0.16220537056594256</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.15</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29599916286511574</span>, <span class="string">'C'</span>: <span class="number">0.11386642947844947</span>, <span class="string">'B'</span>: <span class="number">0.11386642947844947</span>, <span class="string">'E'</span>: <span class="number">0.31305426256607427</span>, <span class="string">'D'</span>: <span class="number">0.16225966200679048</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.16</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29609612318116313</span>, <span class="string">'C'</span>: <span class="number">0.11389390156799623</span>, <span class="string">'B'</span>: <span class="number">0.11389390156799623</span>, <span class="string">'E'</span>: <span class="number">0.3131354372049671</span>, <span class="string">'D'</span>: <span class="number">0.16229880973439462</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.17</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2961651216242221</span>, <span class="string">'C'</span>: <span class="number">0.11391345112686294</span>, <span class="string">'B'</span>: <span class="number">0.11391345112686294</span>, <span class="string">'E'</span>: <span class="number">0.3131936384609857</span>, <span class="string">'D'</span>: <span class="number">0.16232666785577968</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.18</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29621459269183786</span>, <span class="string">'C'</span>: <span class="number">0.11392746792935407</span>, <span class="string">'B'</span>: <span class="number">0.11392746792935407</span>, <span class="string">'E'</span>: <span class="number">0.3132351892873392</span>, <span class="string">'D'</span>: <span class="number">0.16234664179932953</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.19</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2962499108942383</span>, <span class="string">'C'</span>: <span class="number">0.11393747475336752</span>, <span class="string">'B'</span>: <span class="number">0.11393747475336752</span>, <span class="string">'E'</span>: <span class="number">0.31326492583997373</span>, <span class="string">'D'</span>: <span class="number">0.1623609015235487</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.20</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2962751869639777</span>, <span class="string">'C'</span>: <span class="number">0.11394463630646035</span>, <span class="string">'B'</span>: <span class="number">0.11394463630646035</span>, <span class="string">'E'</span>: <span class="number">0.3132861775857534</span>, <span class="string">'D'</span>: <span class="number">0.162371106736706</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.21</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2962932509478904</span>, <span class="string">'C'</span>: <span class="number">0.11394975443523561</span>, <span class="string">'B'</span>: <span class="number">0.11394975443523561</span>, <span class="string">'E'</span>: <span class="number">0.31330137763112553</span>, <span class="string">'D'</span>: <span class="number">0.16237840007021073</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.22</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29630617098645673</span>, <span class="string">'C'</span>: <span class="number">0.11395341511282941</span>, <span class="string">'B'</span>: <span class="number">0.11395341511282941</span>, <span class="string">'E'</span>: <span class="number">0.31331224432853666</span>, <span class="string">'D'</span>: <span class="number">0.1623836165357819</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.23</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.2963154076792562</span>, <span class="string">'C'</span>: <span class="number">0.11395603217578926</span>, <span class="string">'B'</span>: <span class="number">0.11395603217578926</span>, <span class="string">'E'</span>: <span class="number">0.31332001507954593</span>, <span class="string">'D'</span>: <span class="number">0.16238734585049966</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.24</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29632201281761406</span>, <span class="string">'C'</span>: <span class="number">0.11395790363165731</span>, <span class="string">'B'</span>: <span class="number">0.11395790363165731</span>, <span class="string">'E'</span>: <span class="number">0.3133255711032878</span>, <span class="string">'D'</span>: <span class="number">0.16239001267511166</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.25</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29632673543779464</span>, <span class="string">'C'</span>: <span class="number">0.11395924170737515</span>, <span class="string">'B'</span>: <span class="number">0.11395924170737515</span>, <span class="string">'E'</span>: <span class="number">0.31332954395074825</span>, <span class="string">'D'</span>: <span class="number">0.1623919194330096</span>&#125;</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.26</span> iteration</span><br><span class="line">&#123;<span class="string">'A'</span>: <span class="number">0.29633011235813606</span>, <span class="string">'C'</span>: <span class="number">0.11396019850147188</span>, <span class="string">'B'</span>: <span class="number">0.11396019850147188</span>, <span class="string">'E'</span>: <span class="number">0.31333238460743484</span>, <span class="string">'D'</span>: <span class="number">0.16239328286459742</span>&#125;</span><br><span class="line">finished <span class="keyword">in</span> D iterations!</span><br><span class="line">(<span class="string">'The final page rank is\n'</span>, &#123;<span class="string">'A'</span>: <span class="number">0.29633011235813606</span>, <span class="string">'C'</span>: <span class="number">0.11396019850147188</span>, <span class="string">'B'</span>: <span class="number">0.11396019850147188</span>, <span class="string">'E'</span>: <span class="number">0.31333238460743484</span>, <span class="string">'D'</span>: <span class="number">0.16239328286459742</span>&#125;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="TextRank"><a href="#TextRank" class="headerlink" title="TextRank"></a>TextRank</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>进行关键词提取时，TextRank算法思想和PageRank算法类似，不同的是，TextRank中时以词为节点，以共现关系建立起节点之间的链接。</p>
+<ul>
+<li>分词，并去除停用词等噪音</li>
+<li>对于每一个词，前后5个词，共10个作为和它link的词。但是比方说，“程序员”在文章中出现了两次，那就是和程序员这个词link的此为这10个词的并集</li>
+<li>算法就类似PageRank，进行迭代，直至收敛</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-7-25/45854060.jpg" alt></p>
+<h3 id="算法实现-1"><a href="#算法实现-1" class="headerlink" title="算法实现"></a>算法实现</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*-coding:utf-8-*-</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">@Time   : 2018/7/25 12:03</span></span><br><span class="line"><span class="string">@Author : Mark</span></span><br><span class="line"><span class="string">@File   : text_rank.py</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> pygraph.classes.digraph <span class="keyword">import</span> digraph</span><br><span class="line"></span><br><span class="line">reload(sys)</span><br><span class="line">sys.setdefaultencoding(<span class="string">'utf-8'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PRIterator</span>:</span></span><br><span class="line">    __doc__ = <span class="string">'''计算一张图中的PR值'''</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, dg)</span>:</span></span><br><span class="line">        self.damping_factor = <span class="number">0.85</span>  <span class="comment"># 阻尼系数,即α</span></span><br><span class="line">        self.max_iterations = <span class="number">100</span>  <span class="comment"># 最大迭代次数</span></span><br><span class="line">        self.min_delta = <span class="number">0.00001</span>  <span class="comment"># 确定迭代是否结束的参数,即ϵ</span></span><br><span class="line">        self.graph = dg</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">page_rank</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment">#  先将图中没有出链的节点改为对所有节点都有出链</span></span><br><span class="line">        <span class="keyword">for</span> node <span class="keyword">in</span> self.graph.nodes():</span><br><span class="line">            <span class="keyword">if</span> len(self.graph.neighbors(node)) == <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">for</span> node2 <span class="keyword">in</span> self.graph.nodes():</span><br><span class="line">                    digraph.add_edge(self.graph, (node, node2))</span><br><span class="line"></span><br><span class="line">        nodes = self.graph.nodes()</span><br><span class="line">        graph_size = len(nodes)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> graph_size == <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> &#123;&#125;</span><br><span class="line">        page_rank = dict.fromkeys(nodes, <span class="number">1.0</span> / graph_size)  <span class="comment"># 给每个节点赋予初始的PR值</span></span><br><span class="line">        damping_value = (</span><br><span class="line">                                <span class="number">1.0</span> - self.damping_factor) / graph_size  <span class="comment"># 公式中的(1−α)/N部分</span></span><br><span class="line"></span><br><span class="line">        flag = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> range(self.max_iterations):</span><br><span class="line">            change = <span class="number">0</span></span><br><span class="line">            <span class="keyword">for</span> node <span class="keyword">in</span> nodes:</span><br><span class="line">                rank = <span class="number">0</span></span><br><span class="line">                <span class="keyword">for</span> incident_page <span class="keyword">in</span> self.graph.incidents(node):  <span class="comment"># 遍历所有“入射”的页面</span></span><br><span class="line">                    rank += self.damping_factor * (</span><br><span class="line">                            page_rank[incident_page] / len(</span><br><span class="line">                        self.graph.neighbors(incident_page)))</span><br><span class="line">                rank += damping_value</span><br><span class="line">                change += abs(page_rank[node] - rank)  <span class="comment"># 绝对值</span></span><br><span class="line">                page_rank[node] = rank</span><br><span class="line"></span><br><span class="line">            print(<span class="string">"This is NO.%s iteration"</span> % (i + <span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> change &lt; self.min_delta:</span><br><span class="line">                flag = <span class="literal">True</span></span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> flag:</span><br><span class="line">            print(<span class="string">"finished in %s iterations!"</span> % node)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            print(<span class="string">"finished out of 100 iterations!"</span>)</span><br><span class="line">        <span class="keyword">return</span> page_rank</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    dg = digraph()</span><br><span class="line">    words_dict = &#123;</span><br><span class="line">        <span class="string">u"开发"</span>: [<span class="string">u"专业"</span>, <span class="string">u"程序员"</span>, <span class="string">u"维护"</span>, <span class="string">u"英文"</span>, <span class="string">u"程序"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"软件"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"分为"</span>, <span class="string">u"界限"</span>, <span class="string">u"高级"</span>, <span class="string">u"中国"</span>, <span class="string">u"特别"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"程序员"</span>: [<span class="string">u"开发"</span>, <span class="string">u"软件"</span>, <span class="string">u"分析员"</span>, <span class="string">u"维护"</span>, <span class="string">u"系统"</span>, <span class="string">u"项目"</span>, <span class="string">u"经理"</span>, <span class="string">u"分为"</span>, <span class="string">u"英文"</span>, <span class="string">u"程序"</span>, <span class="string">u"专业"</span>, <span class="string">u"设计"</span>, <span class="string">u"高级"</span>, <span class="string">u"人员"</span>,</span><br><span class="line">                 <span class="string">u"中国"</span>],</span><br><span class="line">        <span class="string">u"分析员"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"系统"</span>, <span class="string">u"项目"</span>, <span class="string">u"经理"</span>, <span class="string">u"高级"</span>],</span><br><span class="line">        <span class="string">u"维护"</span>: [<span class="string">u"专业"</span>, <span class="string">u"开发"</span>, <span class="string">u"程序员"</span>, <span class="string">u"分为"</span>, <span class="string">u"英文"</span>, <span class="string">u"程序"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"系统"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"分析员"</span>, <span class="string">u"项目"</span>, <span class="string">u"经理"</span>, <span class="string">u"分为"</span>, <span class="string">u"高级"</span>],</span><br><span class="line">        <span class="string">u"项目"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"分析员"</span>, <span class="string">u"系统"</span>, <span class="string">u"经理"</span>, <span class="string">u"高级"</span>],</span><br><span class="line">        <span class="string">u"经理"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"分析员"</span>, <span class="string">u"系统"</span>, <span class="string">u"项目"</span>],</span><br><span class="line">        <span class="string">u"分为"</span>: [<span class="string">u"专业"</span>, <span class="string">u"软件"</span>, <span class="string">u"设计"</span>, <span class="string">u"程序员"</span>, <span class="string">u"维护"</span>, <span class="string">u"系统"</span>, <span class="string">u"高级"</span>, <span class="string">u"程序"</span>, <span class="string">u"中国"</span>, <span class="string">u"特别"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"英文"</span>: [<span class="string">u"专业"</span>, <span class="string">u"开发"</span>, <span class="string">u"程序员"</span>, <span class="string">u"维护"</span>, <span class="string">u"程序"</span>],</span><br><span class="line">        <span class="string">u"程序"</span>: [<span class="string">u"专业"</span>, <span class="string">u"开发"</span>, <span class="string">u"设计"</span>, <span class="string">u"程序员"</span>, <span class="string">u"编码"</span>, <span class="string">u"维护"</span>, <span class="string">u"界限"</span>, <span class="string">u"分为"</span>, <span class="string">u"英文"</span>, <span class="string">u"特别"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"特别"</span>: [<span class="string">u"软件"</span>, <span class="string">u"编码"</span>, <span class="string">u"分为"</span>, <span class="string">u"界限"</span>, <span class="string">u"程序"</span>, <span class="string">u"中国"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"专业"</span>: [<span class="string">u"开发"</span>, <span class="string">u"程序员"</span>, <span class="string">u"维护"</span>, <span class="string">u"分为"</span>, <span class="string">u"英文"</span>, <span class="string">u"程序"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"设计"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"编码"</span>, <span class="string">u"分为"</span>, <span class="string">u"程序"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"编码"</span>: [<span class="string">u"设计"</span>, <span class="string">u"界限"</span>, <span class="string">u"程序"</span>, <span class="string">u"中国"</span>, <span class="string">u"特别"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"界限"</span>: [<span class="string">u"软件"</span>, <span class="string">u"编码"</span>, <span class="string">u"程序"</span>, <span class="string">u"中国"</span>, <span class="string">u"特别"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"高级"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"软件"</span>, <span class="string">u"分析员"</span>, <span class="string">u"系统"</span>, <span class="string">u"项目"</span>, <span class="string">u"分为"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"中国"</span>: [<span class="string">u"程序员"</span>, <span class="string">u"软件"</span>, <span class="string">u"编码"</span>, <span class="string">u"分为"</span>, <span class="string">u"界限"</span>, <span class="string">u"特别"</span>, <span class="string">u"人员"</span>],</span><br><span class="line">        <span class="string">u"人员"</span>: [<span class="string">u"开发"</span>, <span class="string">u"程序员"</span>, <span class="string">u"软件"</span>, <span class="string">u"维护"</span>, <span class="string">u"分为"</span>, <span class="string">u"程序"</span>, <span class="string">u"特别"</span>, <span class="string">u"专业"</span>, <span class="string">u"设计"</span>, <span class="string">u"编码"</span>, <span class="string">u"界限"</span>, <span class="string">u"高级"</span>, <span class="string">u"中国"</span>]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    words_key_list = list()</span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> words_dict.iteritems():</span><br><span class="line">        words_key_list.append(k)</span><br><span class="line">    dg.add_nodes(words_key_list)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> words_dict.iteritems():</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> v:</span><br><span class="line">            dg.add_edge((k, i))</span><br><span class="line"></span><br><span class="line">    pr = PRIterator(dg)</span><br><span class="line">    page_ranks = pr.page_rank()</span><br><span class="line"></span><br><span class="line">    sort_text_rank = sorted(page_ranks.items(), key=<span class="keyword">lambda</span> d: d[<span class="number">1</span>], reverse=<span class="literal">True</span>)</span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> sort_text_rank:</span><br><span class="line">        <span class="keyword">print</span> str(k) + <span class="string">u":"</span> + str(v)</span><br><span class="line">    <span class="keyword">print</span> sort_text_rank</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">This <span class="keyword">is</span> NO<span class="number">.1</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.2</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.3</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.4</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.5</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.6</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.7</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.8</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.9</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.10</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.11</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.12</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.13</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.14</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.15</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.16</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.17</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.18</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.19</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.20</span> iteration</span><br><span class="line">This <span class="keyword">is</span> NO<span class="number">.21</span> iteration</span><br><span class="line">finished <span class="keyword">in</span> 编码 iterations!</span><br><span class="line">程序员:<span class="number">0.101580333895</span></span><br><span class="line">人员:<span class="number">0.0859679826211</span></span><br><span class="line">分为:<span class="number">0.0740249633386</span></span><br><span class="line">程序:<span class="number">0.0740144395754</span></span><br><span class="line">高级:<span class="number">0.0514255757372</span></span><br><span class="line">软件:<span class="number">0.0493472878223</span></span><br><span class="line">中国:<span class="number">0.0492889214488</span></span><br><span class="line">特别:<span class="number">0.049256278494</span></span><br><span class="line">专业:<span class="number">0.0491852387529</span></span><br><span class="line">维护:<span class="number">0.0491848961483</span></span><br><span class="line">系统:<span class="number">0.0466872602095</span></span><br><span class="line">编码:<span class="number">0.0436170552749</span></span><br><span class="line">界限:<span class="number">0.0433726145516</span></span><br><span class="line">开发:<span class="number">0.043302777825</span></span><br><span class="line">项目:<span class="number">0.0406679129266</span></span><br><span class="line">分析员:<span class="number">0.040667762853</span></span><br><span class="line">英文:<span class="number">0.037449970767</span></span><br><span class="line">设计:<span class="number">0.0368904751286</span></span><br><span class="line">经理:<span class="number">0.034092209713</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="引用声明"><a href="#引用声明" class="headerlink" title="引用声明"></a>引用声明</h2><p><a href="https://blog.csdn.net/zrc199021/article/details/53728499" target="_blank" rel="noopener">TF-IDF原理及使用</a></p>
+<p><a href="https://blog.csdn.net/rubinorth/article/details/52215036" target="_blank" rel="noopener">PageRank算法–从原理到实现</a></p>
+<p><a href="https://blog.csdn.net/zhangf666/article/details/77841845" target="_blank" rel="noopener">基于TextRank的关键词提取算法</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/26/吴恩达机器学习笔记（一）/" rel="next" title="吴恩达机器学习笔记（一）">
+                <i class="fa fa-chevron-left"></i> 吴恩达机器学习笔记（一）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/07/26/距离度量方法/" rel="prev" title="距离度量方法">
+                距离度量方法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#TF-IDF、PageRank、TextRank"><span class="nav-number">1.</span> <span class="nav-text">TF-IDF、PageRank、TextRank</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#TF-IDF"><span class="nav-number">1.1.</span> <span class="nav-text">TF-IDF</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是TF-IDF"><span class="nav-number">1.1.1.</span> <span class="nav-text">什么是TF-IDF</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PageRank"><span class="nav-number">1.2.</span> <span class="nav-text">PageRank</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#算法来源"><span class="nav-number">1.2.1.</span> <span class="nav-text">算法来源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#算法原理"><span class="nav-number">1.2.2.</span> <span class="nav-text">算法原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#算法实现"><span class="nav-number">1.2.3.</span> <span class="nav-text">算法实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TextRank"><span class="nav-number">1.3.</span> <span class="nav-text">TextRank</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原理"><span class="nav-number">1.3.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#算法实现-1"><span class="nav-number">1.3.2.</span> <span class="nav-text">算法实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用声明"><span class="nav-number">1.4.</span> <span class="nav-text">引用声明</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

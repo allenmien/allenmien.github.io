@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="维比特算法问题动态规划最佳的路径：  路径总数为： 3*3*3=27 每次从头算到尾，每一条路径需要经过4次加法，共： 27*4 = 108  维比特算法的推演假设我们处于位置t（有n个选择），如果我们想要知道t+1（m个选择）步应该怎么走，我们需要知道从(0-t)共n个路径的值（这个路径的值已经是前面的最小的了）是多少。还需要知道从t到t+1的对于n中的每一个，对应的m个选择的路径是多少。这样对">
+<meta property="og:type" content="article">
+<meta property="og:title" content="维比特算法">
+<meta property="og:url" content="https://shenmadaxia.com/2020/07/26/维比特算法/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="维比特算法问题动态规划最佳的路径：  路径总数为： 3*3*3=27 每次从头算到尾，每一条路径需要经过4次加法，共： 27*4 = 108  维比特算法的推演假设我们处于位置t（有n个选择），如果我们想要知道t+1（m个选择）步应该怎么走，我们需要知道从(0-t)共n个路径的值（这个路径的值已经是前面的最小的了）是多少。还需要知道从t到t+1的对于n中的每一个，对应的m个选择的路径是多少。这样对">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062458.png">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062639.jpg">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062703.jpg">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062724.jpg">
+<meta property="og:updated_time" content="2020-07-26T07:14:12.332Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="维比特算法">
+<meta name="twitter:description" content="维比特算法问题动态规划最佳的路径：  路径总数为： 3*3*3=27 每次从头算到尾，每一条路径需要经过4次加法，共： 27*4 = 108  维比特算法的推演假设我们处于位置t（有n个选择），如果我们想要知道t+1（m个选择）步应该怎么走，我们需要知道从(0-t)共n个路径的值（这个路径的值已经是前面的最小的了）是多少。还需要知道从t到t+1的对于n中的每一个，对应的m个选择的路径是多少。这样对">
+<meta name="twitter:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062458.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/07/26/维比特算法/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>维比特算法 | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/07/26/维比特算法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">维比特算法
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-07-26 15:14:12" itemprop="dateCreated datePublished" datetime="2020-07-26T15:14:12+08:00">2020-07-26</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="维比特算法"><a href="#维比特算法" class="headerlink" title="维比特算法"></a>维比特算法</h1><h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>动态规划最佳的路径：</p>
+<p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062458.png" alt></p>
+<p>路径总数为：</p>
+<p>3*3*3=27</p>
+<p>每次从头算到尾，每一条路径需要经过4次加法，共：</p>
+<p>27*4 = 108 </p>
+<h2 id="维比特算法的推演"><a href="#维比特算法的推演" class="headerlink" title="维比特算法的推演"></a>维比特算法的推演</h2><p>假设我们处于位置t（有n个选择），如果我们想要知道t+1（m个选择）步应该怎么走，我们需要知道从(0-t)共n个路径的值（这个路径的值已经是前面的最小的了）是多少。还需要知道从t到t+1的对于n中的每一个，对应的m个选择的路径是多少。这样对于位置t上的每一个n的（0, t）已知，（t , t+1）已知，就可以通过计算得到对于t+1时刻的m个选择中的每一个，(0, t+1)的最短路径分别是什么了。</p>
+<p>简单来讲，就是当处于t时刻时，分别独立计算t时刻，经过n个神经元中的任何一个时，该神经元的历史最小值和未来的最小值。</p>
+<h3 id="从A到B"><a href="#从A到B" class="headerlink" title="从A到B"></a>从A到B</h3><p>现在我们在A点，因为下一步如果我们在（B1, B2, B3）点，去思考B1该往哪一个(C1, C2,C3)走时，需要知道B1之前的所有路径的最短的值。</p>
+<p>PS : 这里会有疑惑，如果我已经到了B1，选择往(C1, C2,C3)走时，只要选择最短的一个比方说5不就行了，为什么还需要计算A-B1最短的值呢？</p>
+<p>原因是：我们其中在在每一步时，不仅仅是做判断，很重要的是记录下路径的值，这样我们才能在最后一步的时候，把全部的值，也就是全局的值加起来，进行计算全局的最小值，也就是最短路径。</p>
+<p>假如，我们已经选了B1-C1=5作为选择，但是还是要计算A-B1=6的</p>
+<p>A-B1-C1 = 6+5 =11</p>
+<p>而：A-B2 =7, B2-C2 = 3</p>
+<p>A-B2-C2 = 7+ 3 =10</p>
+<p>我们需要通过这种方式去进行全局的判断。</p>
+<p>也就是说，我们每一步的选择都不是选择，而只是在为最后一步的最终判决积累数据而已。</p>
+<p>简单来讲，如果我们已经处于t时刻（n）, 我们只需要计算出t+1时刻（m）,m个t+1时刻的最短路径值为下一步积累数据就好了。</p>
+<p>在A-B的例子中：</p>
+<p>我们在A时刻，我们需要计算B时刻，3个选择，过往的最短路径值是多少就可以了，那么经过B1, B2, B3的最短路径值为：</p>
+<p>计算经过B1的路径：</p>
+<p>A-B1 = 6</p>
+<p>计算经过B2的路径：</p>
+<p>A-B2 = 7</p>
+<p>计算经过B3的路径：</p>
+<p>A-B3 = 5</p>
+<p>计算复杂度 = 3次加法</p>
+<p>min(B1, B2, B3) = [6，7，5]</p>
+<p>所有通过B1的路径中：A-B1是最短的，为6；</p>
+<p>所有通过B2的路径中：A-B2是最短的，为7；</p>
+<p>所有通过B3的路径中：A-B3是最短的，为5；</p>
+<p>下一步计算时，与A再无关系，只基于B1、B2、B3三个出发点和（6，7，5）对应的初始值（历史值）进行计算：</p>
+<p>B1（A-B1=6）;</p>
+<p>B2（A-B2=7）;</p>
+<p>B3（A-B3=5）;</p>
+<h3 id="从B到C"><a href="#从B到C" class="headerlink" title="从B到C"></a>从B到C</h3><p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062639.jpg" alt></p>
+<p>我们在B时刻，我们需要计算C时刻，3个选择，经过C1、C2、C3的最短路径就好了：</p>
+<p>计算经过C1的路径：</p>
+<p>A-B1-C1 = 6+5 = 11</p>
+<p>A-B2-C1 = 7+4 = 11 </p>
+<p>A-B3-C1 = 5+4 = 9 </p>
+<p>计算经过C2的路径：</p>
+<p>A-B1-C2 = 6+6 = 12 </p>
+<p>A-B2-C2 = 7+3 = 10 </p>
+<p>A-B3-C2 = 5+6 = 11 </p>
+<p>计算经过C3的路径：</p>
+<p>A-B1-C3 = 6+9 = 15 </p>
+<p>A-B2-C3 = 7+7 = 14 </p>
+<p>A-B3-C3 = 5+6 = 11 </p>
+<p>计算复杂度 = 3*3 = 9 次加法</p>
+<p>那么C1, C2,C3的最短路径为：</p>
+<p>min(C1, C2, C3) = [A-B3-C1=5+4=9, A-B2-C2=7+3=10, A-B3-C3=5+4=11]</p>
+<p>所有通过C1的路径中：A-B3-C1是最短的，为9；</p>
+<p>所有通过C2的路径中：A-B2-C2是最短的，为10；</p>
+<p>所有通过C3的路径中：A-B3-C3是最短的，为11；</p>
+<p>下一步计算时，与A、B再无关系，只基于C1、C2、C3三个出发点和（9，10，11）对应的初始值（历史值）进行计算：</p>
+<p>C1（9）;</p>
+<p>C2（10）;</p>
+<p>C3（11）;</p>
+<h3 id="从C到D"><a href="#从C到D" class="headerlink" title="从C到D"></a>从C到D</h3><p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062703.jpg" alt></p>
+<p>我们现在处在C时刻，需要计算D时刻，3个选择，经过D1、D2、D3的最短路径：</p>
+<p>计算经过D1的路径：</p>
+<p>C1-D1 = (A-B3-C1) - D1 = 9 + 7 = 16 </p>
+<p>C2-D1 = (A-B2-C2) - D1 = 10 + 5 = 15 </p>
+<p>C3-D1 = (A-B3-C3) - D1 = 11 + 5 = 16 </p>
+<p>计算经过D2的路径：</p>
+<p>C1-D2 = (A-B3-C1) - D2 = 9 + 8 = 17 </p>
+<p>C2-D2 = (A-B2-C2) - D2 = 10 + 4 = 14 </p>
+<p>C3-D2 = (A-B3-C3) - D2 = 11 + 7 = 18 </p>
+<p>计算经过D3的路径：</p>
+<p>C1-D3 = (A-B3-C1) - D3 = 9 + 3 = 12 </p>
+<p>C2-D3 = (A-B2-C2) - D3 = 10 + 3 = 13 </p>
+<p>C3-D3 = (A-B3-C3) - D3 = 11 + 6 = 17 </p>
+<p>计算复杂度 = 3 *3 = 9 次加法</p>
+<p>min(D1, D2,D3) = [A-B2-C2-D1=10+5=15，A-B2-C2-D2=10+4=14, A-B3-C1-D3=9+3=12 ]</p>
+<p>所有通过D1的路径中：A-B2-C2-D1是最短的；</p>
+<p>所有通过D2的路径中：A-B2-C2-D2是最短的；</p>
+<p>所有通过D3的路径中：A-B3-C1-D3是最短的；</p>
+<p>下一步计算时，与A、B、C再无关系，只基于D1、D2、D3三个出发点和（9，10，11）对应的初始值（历史值）进行计算：</p>
+<p>D1（15）;</p>
+<p>D2（14）;</p>
+<p>D3（12）;</p>
+<h3 id="从D到E"><a href="#从D到E" class="headerlink" title="从D到E"></a>从D到E</h3><p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-03-18-062724.jpg" alt></p>
+<p>现在我们处于D时刻，需要计算E时刻，1个选择：</p>
+<p>计算经过E的路径：</p>
+<p>D1-E = A-B2-C2-D1-E = 15 + 4 = 19 </p>
+<p>D2-E = A-B2-C2-D2-E = 14 + 8 = 22 </p>
+<p>D3-E = A-B3-C1-D3-E = 12 + 5 = 17 </p>
+<p>计算复杂度 = 3次加法</p>
+<p>最算路径为：</p>
+<p>min(E) = A-B3-C1-D3-E = 12+5=17</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="计算复杂度"><a href="#计算复杂度" class="headerlink" title="计算复杂度"></a>计算复杂度</h3><p>维比特计算复杂度 = 3+3*3+3*3+3 = 24 次加法</p>
+<p>可以看到相对于开始的108次加法，我们只是需要24次即可。</p>
+<p>而且在可见的未来，如果中间增加了一层，原来的遍历算法需要增加：</p>
+<p>（3*3*3*3）<em>4 = 108\</em>3 = 324 </p>
+<p>基本上是每一层的个数乘以原来所有的路径</p>
+<p>可是维比特是计算复杂度只是：</p>
+<p>3 + 3*3 + 3*3 + 3*3 +3 = 24+9 = 33 </p>
+<p>对比一下，遍历算法的本质上叠成，而维比特算法的本质是相加.</p>
+<h3 id="维比特降低计算复杂度的直观理解"><a href="#维比特降低计算复杂度的直观理解" class="headerlink" title="维比特降低计算复杂度的直观理解"></a>维比特降低计算复杂度的直观理解</h3><p>我们拿从C到D举例：</p>
+<p>其中的D1 : </p>
+<p>计算经过D1的路径：</p>
+<p>C1-D1 = (A-B3-C1) - D1 = 9 + 7 = 16 </p>
+<p>C2-D1 = (A-B2-C2) - D1 = 10 + 5 = 15 </p>
+<p>C3-D1 = (A-B3-C3) - D1 = 11 + 5 = 16 </p>
+<p>此时我们计算C1-D1，只用了一次加法计算，但是实际上，如果真正的计算经过D1的路径有多少条呢？</p>
+<p>3*3 = 9 条，也就是说，如果我们不把历史记录下来，每一次我们多走一步都要重新计算的话，我们每次都要指数级的计算叠层每一种可能。</p>
+<p>而维比特相当于，把历史记录下来，并取最短的那个也记录下来，以后再计算的时候，都基于这个最短的计算，其他的都不计算了。</p>
+<p>比如我们计算C1-D1的时候，我们只计算(A-B3-C1) - D1 = 9 + 7 = 16 的路径。</p>
+<p>却理都不理：(A-B1-C1)-D1 = 11+7 = 18 的路径。</p>
+<p>而且以后的，凡是经过D1的的路径，都再也理都不理(A-B1-C1)-D1 这种可能了。</p>
+<p>因为我们已经证实，在所有C1-D1之前的经过C1的路径中，已经没有比A-B3更小的了。也就没有必要再去计算别的可能了。</p>
+<p>可以看到通过这种方式，如果层数增加，这种算法省去掉不需要的计算步骤是非常非常非常可观的。</p>
+<p>维比特也就通过这种基于历史和未来的一小步的方法，使得在全局范围可控并全局最优，且计算量可以接受。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/26/距离度量方法/" rel="next" title="距离度量方法">
+                <i class="fa fa-chevron-left"></i> 距离度量方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#维比特算法"><span class="nav-number">1.</span> <span class="nav-text">维比特算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">1.1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#维比特算法的推演"><span class="nav-number">1.2.</span> <span class="nav-text">维比特算法的推演</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#从A到B"><span class="nav-number">1.2.1.</span> <span class="nav-text">从A到B</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从B到C"><span class="nav-number">1.2.2.</span> <span class="nav-text">从B到C</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从C到D"><span class="nav-number">1.2.3.</span> <span class="nav-text">从C到D</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从D到E"><span class="nav-number">1.2.4.</span> <span class="nav-text">从D到E</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.3.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#计算复杂度"><span class="nav-number">1.3.1.</span> <span class="nav-text">计算复杂度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#维比特降低计算复杂度的直观理解"><span class="nav-number">1.3.2.</span> <span class="nav-text">维比特降低计算复杂度的直观理解</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
