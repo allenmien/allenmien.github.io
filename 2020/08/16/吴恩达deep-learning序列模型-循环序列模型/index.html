@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="循环序列模型为什么选择序列模型数学符号 循环神经网络模型如果采用传统的神经网络模型。  输入和输出在不同的样本中，可能不同 他的结果，不能共享 比方在一篇文章中，识别出来“Harry”是一个人名，他并不能共享到其他的样本中，标准另一个样本中那个的“Harry”也是一个人名。     那么循环神经网络是怎么做的呢？第一个样本输入神经网络，他会预测出，这是否是一个实体的结果。 循环神经网络做的是，当他">
+<meta property="og:type" content="article">
+<meta property="og:title" content="吴恩达deep-learning序列模型-循环序列模型">
+<meta property="og:url" content="https://shenmadaxia.com/2020/08/16/吴恩达deep-learning序列模型-循环序列模型/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="循环序列模型为什么选择序列模型数学符号 循环神经网络模型如果采用传统的神经网络模型。  输入和输出在不同的样本中，可能不同 他的结果，不能共享 比方在一篇文章中，识别出来“Harry”是一个人名，他并不能共享到其他的样本中，标准另一个样本中那个的“Harry”也是一个人名。     那么循环神经网络是怎么做的呢？第一个样本输入神经网络，他会预测出，这是否是一个实体的结果。 循环神经网络做的是，当他">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-074302.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-074844.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-082133.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-082251.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-091138.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-091228.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-091244.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-123442.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-130136.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125942.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125314.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125333.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125402.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-20/54017445.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-20/50406473.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-20/76449817.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/63555368.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/39320879.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/16930615.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/38238640.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/76496374.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/13942477.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/9426287.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/18986231.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/66076549.jpg">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/15083812.jpg">
+<meta property="og:updated_time" content="2020-08-16T05:38:09.500Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="吴恩达deep-learning序列模型-循环序列模型">
+<meta name="twitter:description" content="循环序列模型为什么选择序列模型数学符号 循环神经网络模型如果采用传统的神经网络模型。  输入和输出在不同的样本中，可能不同 他的结果，不能共享 比方在一篇文章中，识别出来“Harry”是一个人名，他并不能共享到其他的样本中，标准另一个样本中那个的“Harry”也是一个人名。     那么循环神经网络是怎么做的呢？第一个样本输入神经网络，他会预测出，这是否是一个实体的结果。 循环神经网络做的是，当他">
+<meta name="twitter:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-074302.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/08/16/吴恩达deep-learning序列模型-循环序列模型/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>吴恩达deep-learning序列模型-循环序列模型 | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/08/16/吴恩达deep-learning序列模型-循环序列模型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">吴恩达deep-learning序列模型-循环序列模型
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-08-16 13:38:09" itemprop="dateCreated datePublished" datetime="2020-08-16T13:38:09+08:00">2020-08-16</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="循环序列模型"><a href="#循环序列模型" class="headerlink" title="循环序列模型"></a>循环序列模型</h1><h2 id="为什么选择序列模型"><a href="#为什么选择序列模型" class="headerlink" title="为什么选择序列模型"></a>为什么选择序列模型</h2><h2 id="数学符号"><a href="#数学符号" class="headerlink" title="数学符号"></a>数学符号</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-074302.jpg" alt></p>
+<h2 id="循环神经网络模型"><a href="#循环神经网络模型" class="headerlink" title="循环神经网络模型"></a>循环神经网络模型</h2><p>如果采用传统的神经网络模型。</p>
+<ul>
+<li>输入和输出在不同的样本中，可能不同</li>
+<li>他的结果，不能共享<ul>
+<li>比方在一篇文章中，识别出来“Harry”是一个人名，他并不能共享到其他的样本中，标准另一个样本中那个的“Harry”也是一个人名。</li>
+</ul>
+</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-074844.png" alt></p>
+<h3 id="那么循环神经网络是怎么做的呢？"><a href="#那么循环神经网络是怎么做的呢？" class="headerlink" title="那么循环神经网络是怎么做的呢？"></a>那么循环神经网络是怎么做的呢？</h3><p>第一个样本输入神经网络，他会预测出，这是否是一个实体的结果。</p>
+<p>循环神经网络做的是，当他读到第二个词的时候，他不仅仅是利用第二个词去预测结果。</p>
+<p>他还会输入来自第一个词（时间步1）的信息。</p>
+<p>具体来来讲，时间步1的激活值，会传递到时间步2。</p>
+<h3 id="吴恩达的循环神经网络的表示方法："><a href="#吴恩达的循环神经网络的表示方法：" class="headerlink" title="吴恩达的循环神经网络的表示方法："></a>吴恩达的循环神经网络的表示方法：</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-082133.png" alt></p>
+<h3 id="通常论文的循环神经网络的表示方法："><a href="#通常论文的循环神经网络的表示方法：" class="headerlink" title="通常论文的循环神经网络的表示方法："></a>通常论文的循环神经网络的表示方法：</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-082251.jpg" alt></p>
+<h3 id="循环神经网络中的参数表示方法"><a href="#循环神经网络中的参数表示方法" class="headerlink" title="循环神经网络中的参数表示方法"></a>循环神经网络中的参数表示方法</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-091138.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-091228.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-091244.jpg" alt></p>
+<h2 id="通过时间的反向传播"><a href="#通过时间的反向传播" class="headerlink" title="通过时间的反向传播"></a>通过时间的反向传播</h2><h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p>交叉熵</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-123442.jpg" alt></p>
+<h2 id="不同类型的循环神经网络"><a href="#不同类型的循环神经网络" class="headerlink" title="不同类型的循环神经网络"></a>不同类型的循环神经网络</h2><h3 id="many-to-many"><a href="#many-to-many" class="headerlink" title="many to many"></a>many to many</h3><h4 id="输入和输出相同"><a href="#输入和输出相同" class="headerlink" title="输入和输出相同"></a>输入和输出相同</h4><p>命名实体识别</p>
+<p>上面介绍的RNN为many to many 类型，输入和输出的数量的相同的。但是还有其他的类型。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-130136.png" alt></p>
+<h4 id="输入和输出不同"><a href="#输入和输出不同" class="headerlink" title="输入和输出不同"></a>输入和输出不同</h4><p>机器翻译</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125942.png" alt></p>
+<h3 id="many-to-one"><a href="#many-to-one" class="headerlink" title="many to one"></a>many to one</h3><p>情感分析，输入一篇文本，但是输出是，这片文章是消极还是积极。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125314.jpg" alt></p>
+<h3 id="one-to-one"><a href="#one-to-one" class="headerlink" title="one to one"></a>one to one</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125333.jpg" alt></p>
+<h3 id="one-to-many"><a href="#one-to-many" class="headerlink" title="one to many"></a>one to many</h3><p>music generation</p>
+<p>第一个层输出的结果也会喂给下一层，作为输入。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-19-125402.jpg" alt></p>
+<h2 id="语言模型和序列生成"><a href="#语言模型和序列生成" class="headerlink" title="语言模型和序列生成"></a>语言模型和序列生成</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-20/54017445.jpg" alt></p>
+<h2 id="对新序列采样"><a href="#对新序列采样" class="headerlink" title="对新序列采样"></a>对新序列采样</h2><h3 id="基于词汇"><a href="#基于词汇" class="headerlink" title="基于词汇"></a>基于词汇</h3><p>如果模型已经训练好了，那么能够从模型中得到什么呢？</p>
+<p>一种非正式的方法就是进行一次新序列采样。</p>
+<p>如下图，已经得到一个基于语料的RNN模型：</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-20/50406473.jpg" alt></p>
+<p>我们的目的是生成一个新的单词序列，也就是一句话。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-20/76449817.jpg" alt></p>
+<h3 id="基于字符"><a href="#基于字符" class="headerlink" title="基于字符"></a>基于字符</h3><p>“Cat”词表会是[C,  a, t]</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><p>不必担心未出现的字符</p>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>序列会非常长</li>
+<li>句子之间的关系捕捉不是很好</li>
+<li>计算起来成本比较高</li>
+</ul>
+<p>趋势是，大多数的情况都是使用基于词汇的，但是特殊情况下会使用基于字符的。</p>
+<p>基于字符会用在处理大量的未知词汇的应用。或者专有词汇的应用。</p>
+<h2 id="带有神经网络的梯度消失"><a href="#带有神经网络的梯度消失" class="headerlink" title="带有神经网络的梯度消失"></a>带有神经网络的梯度消失</h2><h3 id="梯度消失"><a href="#梯度消失" class="headerlink" title="梯度消失"></a>梯度消失</h3><p>例子：</p>
+<ol>
+<li>The cat , which already ate …… , was full.</li>
+<li>The cats , which already ate …… , were full.</li>
+</ol>
+<p>上面的两个例子，cat和 was，cats和were  之间有长期的依赖关系。但是使用RNN很难建立这种长时间的联系。</p>
+<p>因为训练很深的神经网络，会出现梯度消失的问题。</p>
+<p>如果这是 一个非常深的神经网络，这个网络前向传播，再反向传播，从后面的输出误差得到的梯度，是很难传到前面的，很难影响到前面的权重的计算。</p>
+<p>也就是说，一个y^3,其实是受他附件的影响比较大，但是对比较远的地方，影响就比较小。</p>
+<p>最根本的原因是，一个输出的误差很难通过梯度下降的方法传播到 距离 他非常远的地方，并对他产生影响。</p>
+<p>RNN的一个缺点就是不擅长处理长期依赖问题。</p>
+<h3 id="梯度爆炸"><a href="#梯度爆炸" class="headerlink" title="梯度爆炸"></a>梯度爆炸</h3><p>在反向传播的时候，不仅仅会出现梯度指数型消失的问题，还会出现梯度指数型爆炸的问题。</p>
+<p>梯度爆炸会使得参数变得非常大，以至于神经网络参数崩溃。</p>
+<h4 id="梯度修剪"><a href="#梯度修剪" class="headerlink" title="梯度修剪"></a>梯度修剪</h4><p>设置一个阈值，如果梯度大于阈值，缩放梯度向量，保证不会特别大。</p>
+<h2 id="GRU单元"><a href="#GRU单元" class="headerlink" title="GRU单元"></a>GRU单元</h2><p>门控循环单元 </p>
+<p>由于细胞单元C的存在，使得GRU能够缓解反向传播过程中的梯度消失现象。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/63555368.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/39320879.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/16930615.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/38238640.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-21/76496374.jpg" alt></p>
+<h2 id="长短期记忆（LSTM）"><a href="#长短期记忆（LSTM）" class="headerlink" title="长短期记忆（LSTM）"></a>长短期记忆（LSTM）</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/13942477.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/9426287.jpg" alt></p>
+<h2 id="双向RNN"><a href="#双向RNN" class="headerlink" title="双向RNN"></a>双向RNN</h2><p>双向RNN不仅可以获取之前的信息，还可以获取未来的信息。</p>
+<p>但是双向RNN的缺点在于，需要一个完整的序列。</p>
+<p>对于语音识别，需要等到这句话说完，才可以进行BRNN。</p>
+<p>但是对于自然语言处理，文本是非常适合用BRNN的。</p>
+<h3 id="BRNN"><a href="#BRNN" class="headerlink" title="BRNN"></a>BRNN</h3><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/18986231.jpg" alt></p>
+<h2 id="深层循环神经网络"><a href="#深层循环神经网络" class="headerlink" title="深层循环神经网络"></a>深层循环神经网络</h2><p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/66076549.jpg" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/18-8-22/15083812.jpg" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/16/吴恩达deep-learning序列模型-自然语言处理与词嵌入/" rel="next" title="吴恩达deep-learning序列模型-自然语言处理与词嵌入">
+                <i class="fa fa-chevron-left"></i> 吴恩达deep-learning序列模型-自然语言处理与词嵌入
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/16/决策树/" rel="prev" title="决策树">
+                决策树 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#循环序列模型"><span class="nav-number">1.</span> <span class="nav-text">循环序列模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么选择序列模型"><span class="nav-number">1.1.</span> <span class="nav-text">为什么选择序列模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数学符号"><span class="nav-number">1.2.</span> <span class="nav-text">数学符号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环神经网络模型"><span class="nav-number">1.3.</span> <span class="nav-text">循环神经网络模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#那么循环神经网络是怎么做的呢？"><span class="nav-number">1.3.1.</span> <span class="nav-text">那么循环神经网络是怎么做的呢？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#吴恩达的循环神经网络的表示方法："><span class="nav-number">1.3.2.</span> <span class="nav-text">吴恩达的循环神经网络的表示方法：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通常论文的循环神经网络的表示方法："><span class="nav-number">1.3.3.</span> <span class="nav-text">通常论文的循环神经网络的表示方法：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#循环神经网络中的参数表示方法"><span class="nav-number">1.3.4.</span> <span class="nav-text">循环神经网络中的参数表示方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通过时间的反向传播"><span class="nav-number">1.4.</span> <span class="nav-text">通过时间的反向传播</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#损失函数"><span class="nav-number">1.4.1.</span> <span class="nav-text">损失函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不同类型的循环神经网络"><span class="nav-number">1.5.</span> <span class="nav-text">不同类型的循环神经网络</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#many-to-many"><span class="nav-number">1.5.1.</span> <span class="nav-text">many to many</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#输入和输出相同"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">输入和输出相同</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#输入和输出不同"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">输入和输出不同</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#many-to-one"><span class="nav-number">1.5.2.</span> <span class="nav-text">many to one</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-one"><span class="nav-number">1.5.3.</span> <span class="nav-text">one to one</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#one-to-many"><span class="nav-number">1.5.4.</span> <span class="nav-text">one to many</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#语言模型和序列生成"><span class="nav-number">1.6.</span> <span class="nav-text">语言模型和序列生成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对新序列采样"><span class="nav-number">1.7.</span> <span class="nav-text">对新序列采样</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于词汇"><span class="nav-number">1.7.1.</span> <span class="nav-text">基于词汇</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于字符"><span class="nav-number">1.7.2.</span> <span class="nav-text">基于字符</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优点"><span class="nav-number">1.7.2.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#缺点"><span class="nav-number">1.7.2.2.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#带有神经网络的梯度消失"><span class="nav-number">1.8.</span> <span class="nav-text">带有神经网络的梯度消失</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#梯度消失"><span class="nav-number">1.8.1.</span> <span class="nav-text">梯度消失</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#梯度爆炸"><span class="nav-number">1.8.2.</span> <span class="nav-text">梯度爆炸</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#梯度修剪"><span class="nav-number">1.8.2.1.</span> <span class="nav-text">梯度修剪</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GRU单元"><span class="nav-number">1.9.</span> <span class="nav-text">GRU单元</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#长短期记忆（LSTM）"><span class="nav-number">1.10.</span> <span class="nav-text">长短期记忆（LSTM）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#双向RNN"><span class="nav-number">1.11.</span> <span class="nav-text">双向RNN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BRNN"><span class="nav-number">1.11.1.</span> <span class="nav-text">BRNN</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#深层循环神经网络"><span class="nav-number">1.12.</span> <span class="nav-text">深层循环神经网络</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

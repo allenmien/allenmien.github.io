@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Gevent不同的网络模型 阻塞式单进程。  一个进程一个循环处理网络请求，当然性能也是最差的  阻塞式多进程。  每个请求开一个进程去处理，这样就能同时处理多个请求了， 不过缺点就是当请求数变大时CPU花在进程切换开销巨大，效率低下。  非阻塞式事件驱动。  也是多进程，不过使用一个主进程循环来检查是否有网络I/O事件发生，再来决定怎样处理。 省去了上下文切换、进程复制等成本，也不会有死锁、竞争">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python中的Gevent">
+<meta property="og:url" content="https://shenmadaxia.com/2020/08/16/Python中的Gevent/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="Gevent不同的网络模型 阻塞式单进程。  一个进程一个循环处理网络请求，当然性能也是最差的  阻塞式多进程。  每个请求开一个进程去处理，这样就能同时处理多个请求了， 不过缺点就是当请求数变大时CPU花在进程切换开销巨大，效率低下。  非阻塞式事件驱动。  也是多进程，不过使用一个主进程循环来检查是否有网络I/O事件发生，再来决定怎样处理。 省去了上下文切换、进程复制等成本，也不会有死锁、竞争">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-08-16T05:38:09.497Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python中的Gevent">
+<meta name="twitter:description" content="Gevent不同的网络模型 阻塞式单进程。  一个进程一个循环处理网络请求，当然性能也是最差的  阻塞式多进程。  每个请求开一个进程去处理，这样就能同时处理多个请求了， 不过缺点就是当请求数变大时CPU花在进程切换开销巨大，效率低下。  非阻塞式事件驱动。  也是多进程，不过使用一个主进程循环来检查是否有网络I/O事件发生，再来决定怎样处理。 省去了上下文切换、进程复制等成本，也不会有死锁、竞争">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/08/16/Python中的Gevent/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Python中的Gevent | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/08/16/Python中的Gevent/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Python中的Gevent
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-08-16 13:38:09" itemprop="dateCreated datePublished" datetime="2020-08-16T13:38:09+08:00">2020-08-16</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Gevent"><a href="#Gevent" class="headerlink" title="Gevent"></a>Gevent</h1><h2 id="不同的网络模型"><a href="#不同的网络模型" class="headerlink" title="不同的网络模型"></a>不同的网络模型</h2><ul>
+<li>阻塞式单进程。</li>
+</ul>
+<p>一个进程一个循环处理网络请求，当然性能也是最差的</p>
+<ul>
+<li>阻塞式多进程。</li>
+</ul>
+<p>每个请求开一个进程去处理，这样就能同时处理多个请求了， 不过缺点就是当请求数变大时CPU花在进程切换开销巨大，效率低下。</p>
+<ul>
+<li>非阻塞式事件驱动。</li>
+</ul>
+<p>也是多进程，不过使用一个主进程循环来检查是否有网络I/O事件发生，再来决定怎样处理。 省去了上下文切换、进程复制等成本，也不会有死锁、竞争的发生。 不过缺点是没有阻塞式进程直观</p>
+<ul>
+<li>非阻塞式Coroutine(协程)。</li>
+</ul>
+<p>它的本质也是事件驱动，只在单一循环上面检查事件的发生，但是加上了coroutine的概念。 gevent就是这种框架的代表。</p>
+<h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><ul>
+<li>简单来讲，coroutine就是允许你暂时中断之后再继续执行的程序。事实上，python最基础的coroutine就是生成器。</li>
+</ul>
+<p>下面代码示例解释了：第一次的next(bar)，执行到了yield，执行两次print后，再执行next(bar)， print(u’foo: 控制权又回到我手上了，叫我大笨蛋’)再次停留在yield，再次print(u’main: 老大我又来了’)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf8 -*-</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">foo</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">10</span>):</span><br><span class="line">        <span class="comment"># 暂时返回一个值，并将控制权交出去</span></span><br><span class="line">        <span class="keyword">yield</span> i</span><br><span class="line">        print(<span class="string">u'foo: 控制权又回到我手上了，叫我大笨蛋'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">bar = foo()</span><br><span class="line"><span class="comment"># 执行coroutine</span></span><br><span class="line">print(next(bar))</span><br><span class="line">print(<span class="string">u'main: 现在控制权在我手上，啦啦啦'</span>)</span><br><span class="line">print(<span class="string">'main:hello baby!'</span>)</span><br><span class="line"><span class="comment"># 回到刚刚foo这个coroutine中断的地方继续执行</span></span><br><span class="line">print(next(bar))</span><br><span class="line">print(<span class="string">u'main: 老大我又来了'</span>)</span><br><span class="line">print(next(bar))</span><br><span class="line">print(next(bar))</span><br></pre></td></tr></table></figure>
+
+<pre><code>0
+main: 现在控制权在我手上，啦啦啦
+main:hello baby!
+foo: 控制权又回到我手上了，叫我大笨蛋
+1
+main: 老大我又来了
+foo: 控制权又回到我手上了，叫我大笨蛋
+2
+foo: 控制权又回到我手上了，叫我大笨蛋
+3</code></pre><h2 id="Gevent-1"><a href="#Gevent-1" class="headerlink" title="Gevent"></a>Gevent</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><ul>
+<li>事实上程序写的跟普通的阻塞式程序一样，但它是异步的</li>
+<li>monkey.patch_all()，也就是猴子补丁。因为python内置的各种函数库和IO库一般都是阻塞式的，比如sleep()就会当前进程，而monkey就是负责将这些阻塞函数全部取代替换成gevent中相应的异步函数。</li>
+<li>gevent打了monkey patch之后会设置python相应的模块设置成非阻塞，然后在内部实现epoll的机制，一旦调用非阻塞的IO(比如recv)都会立刻返回，并且设置一个回调函数，这个回调函数用于切换到当前子coroutine，设置好回掉函数之后就把控制权返回给主coroutine，主coroutine继续调度。一旦网络I/O准备就绪，epoll会触发之前设置的回调函数，从而引发主coroutine切换到子coroutine，做相应的操作。</li>
+<li>joinall()的意思是等待列表中所有coroutine完成后再返回。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"""Spawn multiple workers and wait for them to complete"""</span></span><br><span class="line">urls = [</span><br><span class="line">    <span class="string">'http://www.gevent.org/'</span>, <span class="string">'http://www.baidu.com'</span>, <span class="string">'http://www.python.org'</span></span><br><span class="line">]</span><br><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent <span class="keyword">import</span> monkey</span><br><span class="line"><span class="comment"># patches stdlib (including socket and ssl modules) to cooperate with other greenlets</span></span><br><span class="line">monkey.patch_all()</span><br><span class="line"><span class="keyword">import</span> urllib2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_head</span><span class="params">(url)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'Starting %s'</span> % url</span><br><span class="line">    data = urllib2.urlopen(url).read()</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'%s: %s bytes: %r'</span> % (url, len(data), data[:<span class="number">50</span>])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># jobs = list()</span></span><br><span class="line"><span class="comment"># for url in urls:</span></span><br><span class="line"><span class="comment">#     jobs.append(gevent.spawn(print_head, url))</span></span><br><span class="line">jobs = [gevent.spawn(print_head, url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">gevent.joinall(jobs)</span><br></pre></td></tr></table></figure>
+
+<pre><code>The history saving thread hit an unexpected error (LoopExit(&apos;This operation would block forever&apos;, &lt;Hub at 0x102fbc050 select pending=0 ref=0&gt;)).History will not be written to the database.
+Starting http://www.gevent.org/
+Starting http://www.baidu.com
+Starting http://www.python.org
+http://www.baidu.com: 112190 bytes: &apos;&lt;!DOCTYPE html&gt;\n&lt;!--STATUS OK--&gt;\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r&apos;
+http://www.python.org: 48853 bytes: &apos;&lt;!doctype html&gt;\n&lt;!--[if lt IE 7]&gt;   &lt;html class=&quot;n&apos;
+http://www.gevent.org/: 8734 bytes: &apos;&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Trans&apos;</code></pre><h3 id="上下文切换"><a href="#上下文切换" class="headerlink" title="上下文切换"></a>上下文切换</h3><p>gevent.spawn 的重要功能就是封装了greenlet里面的函数。 初始化的greenlet放在了threads这个list里面， 被传递给了 gevent.joinall 这个函数，它会阻塞主程序来执行所有的greenlet。<br>在异步执行的情况下，所有任务的执行顺序是完全随机的。每一个greenlet的都不会阻塞其他greenlet的执行。</p>
+<h4 id="简单示例"><a href="#简单示例" class="headerlink" title="简单示例"></a>简单示例</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">foo</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">'1'</span>)</span><br><span class="line">    gevent.sleep(<span class="number">0</span>)</span><br><span class="line">    print(<span class="string">'2'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bar</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">'3'</span>)</span><br><span class="line">    gevent.sleep(<span class="number">0</span>)</span><br><span class="line">    print(<span class="string">'4'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">gevent.joinall([</span><br><span class="line">    gevent.spawn(foo),</span><br><span class="line">    gevent.spawn(bar),</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<pre><code>1
+3
+2
+4
+
+
+
+
+[&lt;Greenlet at 0x10dd045f0&gt;, &lt;Greenlet at 0x10dd04870&gt;]</code></pre><h4 id="执行顺序示例代码"><a href="#执行顺序示例代码" class="headerlink" title="执行顺序示例代码"></a>执行顺序示例代码</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">task</span><span class="params">(pid)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    Some non-deterministic task</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    gevent.sleep(random.randint(<span class="number">0</span>, <span class="number">2</span>) * <span class="number">0.001</span>)</span><br><span class="line">    print(<span class="string">'Task'</span>, pid, <span class="string">'done'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">synchronous</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">10</span>):</span><br><span class="line">        task(i)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">asynchronous</span><span class="params">()</span>:</span></span><br><span class="line">    threads = [gevent.spawn(task, i) <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">10</span>)]</span><br><span class="line">    gevent.joinall(threads)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">print(<span class="string">'不采用协程的执行顺序，Synchronous:'</span>)</span><br><span class="line">synchronous()</span><br><span class="line">print(<span class="string">'采用协程的执行顺序，Asynchronous:'</span>)</span><br><span class="line">asynchronous()</span><br></pre></td></tr></table></figure>
+
+<pre><code>不采用协程的执行顺序，Synchronous:
+(&apos;Task&apos;, 1, &apos;done&apos;)
+(&apos;Task&apos;, 2, &apos;done&apos;)
+(&apos;Task&apos;, 3, &apos;done&apos;)
+(&apos;Task&apos;, 4, &apos;done&apos;)
+(&apos;Task&apos;, 5, &apos;done&apos;)
+(&apos;Task&apos;, 6, &apos;done&apos;)
+(&apos;Task&apos;, 7, &apos;done&apos;)
+(&apos;Task&apos;, 8, &apos;done&apos;)
+(&apos;Task&apos;, 9, &apos;done&apos;)
+采用协程的执行顺序，Asynchronous:
+(&apos;Task&apos;, 1, &apos;done&apos;)
+(&apos;Task&apos;, 4, &apos;done&apos;)
+(&apos;Task&apos;, 5, &apos;done&apos;)
+(&apos;Task&apos;, 7, &apos;done&apos;)
+(&apos;Task&apos;, 6, &apos;done&apos;)
+(&apos;Task&apos;, 9, &apos;done&apos;)
+(&apos;Task&apos;, 3, &apos;done&apos;)
+(&apos;Task&apos;, 0, &apos;done&apos;)
+(&apos;Task&apos;, 2, &apos;done&apos;)
+(&apos;Task&apos;, 8, &apos;done&apos;)</code></pre><h3 id="生成greenlet"><a href="#生成greenlet" class="headerlink" title="生成greenlet"></a>生成greenlet</h3><p>我们通过gevent.spawn来包装了对于greenlet的生成， 另外我们还能可以通过创建Greenlet的子类，并且重写 _run 方法来实现<br>我的理解是：可以自定义gevent.spawn，协程内部的执行功能</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent <span class="keyword">import</span> Greenlet</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyGreenlet</span><span class="params">(Greenlet)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, message, n)</span>:</span></span><br><span class="line">        Greenlet.__init__(self)</span><br><span class="line">        self.message = message</span><br><span class="line">        self.n = n</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_run</span><span class="params">(self)</span>:</span></span><br><span class="line">        gevent.sleep(self.n)</span><br><span class="line">        print(self.message)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">g = MyGreenlet(<span class="string">"Hi there!"</span>, <span class="number">3</span>)</span><br><span class="line">g.start()</span><br><span class="line">g.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Hi there!</code></pre><p>​    </p>
+<h3 id="Greenlet-的状态"><a href="#Greenlet-的状态" class="headerlink" title="Greenlet 的状态"></a>Greenlet 的状态</h3><p>greenlet在执行的时候也会出错。Greenlet有可能会无法抛出异常，停止失败，或者消耗了太多的系统资源。<br>greenlet的内部状态通常是一个依赖时间的参数。greenlet有一些标记来让你能够监控greenlet的状态</p>
+<ul>
+<li>started – 标志greenlet是否已经启动</li>
+<li>ready – 标志greenlet是否已经被终止</li>
+<li>successful() – 标志greenlet是否已经被终止，并且没有抛出异常</li>
+<li>value – 由greenlet返回的值</li>
+<li>exception – 在greenlet里面没有被捕获的异常</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">win</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">'You win!'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fail</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">'You fail at failing.'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">winner = gevent.spawn(win)</span><br><span class="line">loser = gevent.spawn(fail)</span><br><span class="line">print(winner.started)  <span class="comment"># True</span></span><br><span class="line">print(loser.started)  <span class="comment"># True</span></span><br><span class="line"><span class="comment"># Exceptions raised in the Greenlet, stay inside the Greenlet.</span></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    gevent.joinall([winner, loser])</span><br><span class="line"><span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">    print(<span class="string">'This will never be reached'</span>)</span><br><span class="line">print(winner.value)  <span class="comment"># 'You win!'</span></span><br><span class="line">print(loser.value)  <span class="comment"># None</span></span><br><span class="line">print(winner.ready())  <span class="comment"># True</span></span><br><span class="line">print(loser.ready())  <span class="comment"># True</span></span><br><span class="line">print(winner.successful())  <span class="comment"># True</span></span><br><span class="line">print(loser.successful())  <span class="comment"># False</span></span><br><span class="line"><span class="comment"># The exception raised in fail, will not propogate outside the</span></span><br><span class="line"><span class="comment"># greenlet. A stack trace will be printed to stdout but it</span></span><br><span class="line"><span class="comment"># will not unwind the stack of the parent.</span></span><br><span class="line">print(loser.exception)</span><br></pre></td></tr></table></figure>
+
+<pre><code>True
+True
+You win!
+None
+True
+True
+True
+False
+You fail at failing.
+
+Traceback (most recent call last):
+  File &quot;C:\ProgramData\Anaconda2\lib\site-packages\gevent\greenlet.py&quot;, line 536, in run
+    result = self._run(*self.args, **self.kwargs)
+  File &quot;&lt;ipython-input-8-e403e0ec5a71&gt;&quot;, line 9, in fail
+    raise Exception(&apos;You fail at failing.&apos;)
+Exception: You fail at failing.
+Wed Nov 22 10:44:28 2017 &lt;Greenlet at 0x65a6a60L: fail&gt; failed with Exception</code></pre><p>​    </p>
+<h3 id="终止程序"><a href="#终止程序" class="headerlink" title="终止程序"></a>终止程序</h3><p>在主程序收到一个SIGQUIT 之后会阻塞程序的执行让Greenlet无法继续执行。 这会导致僵尸进程的产生，需要在操作系统中将这些僵尸进程清除掉。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">import</span> signal</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">run_forever</span><span class="params">()</span>:</span></span><br><span class="line">    gevent.sleep(<span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    gevent.signal(signal.SIGQUIT, gevent.shutdown)</span><br><span class="line">    thread = gevent.spawn(run_forever)</span><br><span class="line">    thread.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>---------------------------------------------------------------------------
+
+AttributeError                            Traceback (most recent call last)
+
+&lt;ipython-input-10-ebfbe3246457&gt; in &lt;module&gt;()
+      8 
+      9 if __name__ == &apos;__main__&apos;:
+---&gt; 10     gevent.signal(signal.SIGQUIT, gevent.shutdown)
+     11     thread = gevent.spawn(run_forever)
+     12     thread.join()
+
+AttributeError: &apos;module&apos; object has no attribute &apos;SIGQUIT&apos;</code></pre><h3 id="超时"><a href="#超时" class="headerlink" title="超时"></a>超时</h3><p>在gevent中支持对于coroutine的超时控制，还能使用with上下文</p>
+<ul>
+<li>如果协程sleep的时间，小于设置的wait时间，则没有问题</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent <span class="keyword">import</span> Timeout</span><br><span class="line">time_to_wait = <span class="number">6</span>  <span class="comment"># seconds</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TooLong</span><span class="params">(Exception)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> Timeout(time_to_wait, TooLong):</span><br><span class="line">    gevent.sleep(<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果协程sleep的时间，大于设置的wait时间，则会报异常</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent <span class="keyword">import</span> Timeout</span><br><span class="line">time_to_wait = <span class="number">2</span>  <span class="comment"># seconds</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TooLong</span><span class="params">(Exception)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> Timeout(time_to_wait, TooLong):</span><br><span class="line">    gevent.sleep(<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>---------------------------------------------------------------------------
+
+TooLong                                   Traceback (most recent call last)
+
+&lt;ipython-input-13-ac2197c4c150&gt; in &lt;module&gt;()
+      9 
+     10 with Timeout(time_to_wait, TooLong):
+---&gt; 11     gevent.sleep(5)
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.py in sleep(seconds, ref)
+    167         waiter.get()
+    168     else:
+--&gt; 169         hub.wait(loop.timer(seconds, ref=ref))
+    170 
+    171 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.py in wait(self, watcher)
+    649         watcher.start(waiter.switch, unique)
+    650         try:
+--&gt; 651             result = waiter.get()
+    652             if result is not unique:
+    653                 raise InvalidSwitchError(&apos;Invalid switch into %s: %r (expected %r)&apos; % (getcurrent(), result, unique))
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.py in get(self)
+    897             self.greenlet = getcurrent()
+    898             try:
+--&gt; 899                 return self.hub.switch()
+    900             finally:
+    901                 self.greenlet = None
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.py in switch(self)
+    628         if switch_out is not None:
+    629             switch_out()
+--&gt; 630         return RawGreenlet.switch(self)
+    631 
+    632     def switch_out(self):
+
+TooLong: </code></pre><h3 id="猴子补丁"><a href="#猴子补丁" class="headerlink" title="猴子补丁"></a>猴子补丁</h3><p>Python的运行时里面允许能够大部分的对象都是可以修改的，包括模块，类和方法。这通常是一个坏主意， 然而在极端的情况下，当有一个库需要加入一些Python基本的功能的时候，monkey patch就能派上用场了。 在上面的例子里，gevent能够改变基础库里的一些使用IO阻塞模型的库比如socket，ssl，threading等等并且把它们改成协程的执行方式。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line">print(socket.socket)</span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">"After monkey patch"</span></span><br><span class="line"><span class="keyword">from</span> gevent <span class="keyword">import</span> monkey</span><br><span class="line">monkey.patch_socket()</span><br><span class="line">print(socket.socket)</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> select</span><br><span class="line">print(select.select)</span><br><span class="line"></span><br><span class="line">monkey.patch_select()</span><br><span class="line"><span class="keyword">print</span> <span class="string">"After monkey patch"</span></span><br><span class="line">print(select.select)</span><br></pre></td></tr></table></figure>
+
+<pre><code>&lt;class &apos;socket._socketobject&apos;&gt;
+After monkey patch
+&lt;class &apos;gevent._socket2.socket&apos;&gt;
+&lt;built-in function select&gt;
+After monkey patch
+&lt;function select at 0x000000000632CF28&gt;</code></pre><h3 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h3><p>有时候我们还需要在多个greenlet直接进行通信，比如某些操作的同步。事件(event)是一个在Greenlet之间异步通信的形式。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.event <span class="keyword">import</span> Event</span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string">Illustrates the use of events</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line">evt = Event()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">setter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="string">'''After 3 seconds, wake all threads waiting on the value of evt'''</span></span><br><span class="line">    print(<span class="string">'setter: Hey wait for me, I will sleep 3s'</span>)</span><br><span class="line">    gevent.sleep(<span class="number">3</span>)</span><br><span class="line">    print(<span class="string">"setter: I'm done"</span>)</span><br><span class="line">    evt.set()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">waiter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="string">'''After 3 seconds the get call will unblock'''</span></span><br><span class="line">    print(<span class="string">"waiter: I'll wait for you"</span>)</span><br><span class="line">    evt.wait()  <span class="comment"># blocking</span></span><br><span class="line">    print(<span class="string">"waiter: It's my turn"</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></span><br><span class="line">    gevent.joinall([</span><br><span class="line">        gevent.spawn(setter),</span><br><span class="line">        gevent.spawn(waiter),</span><br><span class="line">        gevent.spawn(waiter),</span><br><span class="line">        gevent.spawn(waiter),</span><br><span class="line">    ])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<pre><code>setter: Hey wait for me, I will sleep 3s
+waiter: I&apos;ll wait for you
+waiter: I&apos;ll wait for you
+waiter: I&apos;ll wait for you
+setter: I&apos;m done
+waiter: It&apos;s my turn
+waiter: It&apos;s my turn
+waiter: It&apos;s my turn</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.event <span class="keyword">import</span> AsyncResult</span><br><span class="line">a = AsyncResult()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">setter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    After 3 seconds set the result of a.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'setter start'</span></span><br><span class="line">    gevent.sleep(<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'setter start to set'</span></span><br><span class="line">    a.set(<span class="string">'Hello!'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">waiter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    After 3 seconds the get call will unblock after the setter</span></span><br><span class="line"><span class="string">    puts a value into the AsyncResult.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'waiter start'</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">'waiter start to get'</span></span><br><span class="line">    print(a.get())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">gevent.joinall([</span><br><span class="line">    gevent.spawn(setter),</span><br><span class="line">    gevent.spawn(waiter),</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<pre><code>getter start to get
+setter start to set
+Hello!
+
+
+
+
+[&lt;Greenlet at 0x62aa6d0L&gt;, &lt;Greenlet at 0x6367c28L&gt;]</code></pre><h3 id="队列"><a href="#队列" class="headerlink" title="队列"></a>队列</h3><p>队列是一个排序的数据集合，它有常见的put / get操作，但是它是以在Greenlet之间可以安全操作的方式来实现的。<br>举例来说，如果一个Greenlet从队列中取出一项，此项就不会被同时执行的其它Greenlet再取到了。</p>
+<h4 id="阻塞put-get"><a href="#阻塞put-get" class="headerlink" title="阻塞put/get"></a>阻塞put/get</h4><h4 id="case1"><a href="#case1" class="headerlink" title="case1"></a>case1</h4><p>下面的case，在遇到sleep能够执行完毕的原因在于，join方法，会让boss，无论sleep多久，该协程执行完毕之后，再执行下面的joinall,所以可以正常退出。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue</span><br><span class="line">tasks = Queue()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">(n)</span>:</span></span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">not</span> tasks.empty():</span><br><span class="line">        task = tasks.get()</span><br><span class="line">        print(<span class="string">'Worker %s got task %s'</span> % (n, task))</span><br><span class="line"><span class="comment">#         gevent.sleep(0)</span></span><br><span class="line">    print(<span class="string">'Quitting time!'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">25</span>):</span><br><span class="line">        <span class="keyword">if</span> i == <span class="number">10</span>:</span><br><span class="line">            gevent.sleep(<span class="number">10</span>)</span><br><span class="line">        tasks.put(i)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">gevent.spawn(boss).join()</span><br><span class="line">gevent.joinall([</span><br><span class="line">    gevent.spawn(worker, <span class="string">'steve'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'john'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'nancy'</span>),</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<pre><code>Worker steve got task 1
+Worker steve got task 2
+Worker steve got task 3
+Worker steve got task 4
+Worker steve got task 5
+Worker steve got task 6
+Worker steve got task 7
+Worker steve got task 8
+Worker steve got task 9
+Worker steve got task 10
+Worker steve got task 11
+Worker steve got task 12
+Worker steve got task 13
+Worker steve got task 14
+Worker steve got task 15
+Worker steve got task 16
+Worker steve got task 17
+Worker steve got task 18
+Worker steve got task 19
+Worker steve got task 20
+Worker steve got task 21
+Worker steve got task 22
+Worker steve got task 23
+Worker steve got task 24
+Quitting time!
+Quitting time!
+Quitting time!
+
+
+
+
+[&lt;Greenlet at 0x627c210L&gt;, &lt;Greenlet at 0x627c2a8L&gt;, &lt;Greenlet at 0x627c340L&gt;]</code></pre><h4 id="case2"><a href="#case2" class="headerlink" title="case2"></a>case2</h4><p>boss发送者模型，和消费者worker模型，同时在协程里时：boss会先put 1-9，sleep 10秒时，交出控制权，worker开始运行，等sleep 10 秒过后，继续put，直到全部put完毕，才会get。<br>协程之间，如果不用sleep交出控制权（不阻塞）的话，会一直执行同一个，直到运行结束。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue</span><br><span class="line">tasks = Queue()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">(n)</span>:</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        task = tasks.get()</span><br><span class="line">        print(<span class="string">'Worker %s got task %s'</span> % (n, task))</span><br><span class="line">    print(<span class="string">'Quitting time!'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">25</span>):</span><br><span class="line">        <span class="keyword">if</span> i == <span class="number">10</span>:</span><br><span class="line">            gevent.sleep(<span class="number">10</span>)</span><br><span class="line">        tasks.put(i)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">task_list = [</span><br><span class="line">    gevent.spawn(boss),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'steve'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'john'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'nancy'</span>),</span><br><span class="line">]</span><br><span class="line">gevent.joinall(task_list)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Worker steve got task 1
+Worker steve got task 2
+Worker steve got task 3
+Worker steve got task 4
+Worker steve got task 5
+Worker steve got task 6
+Worker steve got task 7
+Worker steve got task 8
+Worker steve got task 9
+Worker steve got task 10
+Worker steve got task 11
+Worker steve got task 12
+Worker steve got task 13
+Worker steve got task 14
+Worker steve got task 15
+Worker steve got task 16
+Worker steve got task 17
+Worker steve got task 18
+Worker steve got task 19
+Worker steve got task 20
+Worker steve got task 21
+Worker steve got task 22
+Worker steve got task 23
+Worker steve got task 24
+
+
+---------------------------------------------------------------------------
+
+LoopExit                                  Traceback (most recent call last)
+
+&lt;ipython-input-6-8e3bd6d0d8c4&gt; in &lt;module&gt;()
+     29 
+     30 # boss()
+---&gt; 31 gevent.joinall(task_list)
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\greenlet.pyc in joinall(greenlets, timeout, raise_error, count)
+    647     &quot;&quot;&quot;
+    648     if not raise_error:
+--&gt; 649         return wait(greenlets, timeout=timeout, count=count)
+    650 
+    651     done = []
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in wait(objects, timeout, count)
+   1036     if objects is None:
+   1037         return get_hub().join(timeout=timeout)
+-&gt; 1038     return list(iwait(objects, timeout, count))
+   1039 
+   1040 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in iwait(objects, timeout, count)
+    983 
+    984         for _ in xrange(count):
+--&gt; 985             item = waiter.get()
+    986             waiter.clear()
+    987             if item is _NONE:
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in get(self)
+    937     def get(self):
+    938         if not self._values:
+--&gt; 939             Waiter.get(self)
+    940             Waiter.clear(self)
+    941 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in get(self)
+    897             self.greenlet = getcurrent()
+    898             try:
+--&gt; 899                 return self.hub.switch()
+    900             finally:
+    901                 self.greenlet = None
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in switch(self)
+    628         if switch_out is not None:
+    629             switch_out()
+--&gt; 630         return RawGreenlet.switch(self)
+    631 
+    632     def switch_out(self):
+
+LoopExit: (&apos;This operation would block forever&apos;, &lt;Hub at 0x627c048 select default pending=0 ref=0&gt;)</code></pre><p>下面的代码，等同于上面的效果</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue</span><br><span class="line">tasks = Queue()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">(n)</span>:</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        task = tasks.get()</span><br><span class="line">        print(<span class="string">'Worker %s got task %s'</span> % (n, task))</span><br><span class="line">    print(<span class="string">'Quitting time!'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">25</span>):</span><br><span class="line">        <span class="keyword">if</span> i == <span class="number">10</span>:</span><br><span class="line">            gevent.sleep(<span class="number">10</span>)</span><br><span class="line">        tasks.put(i)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">task_list = [</span><br><span class="line">    gevent.spawn(worker, <span class="string">'steve'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'john'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'nancy'</span>),</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">boss()</span><br><span class="line">gevent.joinall(task_list)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Worker steve got task 1
+Worker steve got task 2
+Worker steve got task 3
+Worker steve got task 4
+Worker steve got task 5
+Worker steve got task 6
+Worker steve got task 7
+Worker steve got task 8
+Worker steve got task 9
+Worker steve got task 10
+Worker steve got task 11
+Worker steve got task 12
+Worker steve got task 13
+Worker steve got task 14
+Worker steve got task 15
+Worker steve got task 16
+Worker steve got task 17
+Worker steve got task 18
+Worker steve got task 19
+Worker steve got task 20
+Worker steve got task 21
+Worker steve got task 22
+Worker steve got task 23
+Worker steve got task 24
+
+
+---------------------------------------------------------------------------
+
+LoopExit                                  Traceback (most recent call last)
+
+&lt;ipython-input-7-00652269a509&gt; in &lt;module&gt;()
+     26 
+     27 boss()
+---&gt; 28 gevent.joinall(task_list)
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\greenlet.pyc in joinall(greenlets, timeout, raise_error, count)
+    647     &quot;&quot;&quot;
+    648     if not raise_error:
+--&gt; 649         return wait(greenlets, timeout=timeout, count=count)
+    650 
+    651     done = []
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in wait(objects, timeout, count)
+   1036     if objects is None:
+   1037         return get_hub().join(timeout=timeout)
+-&gt; 1038     return list(iwait(objects, timeout, count))
+   1039 
+   1040 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in iwait(objects, timeout, count)
+    983 
+    984         for _ in xrange(count):
+--&gt; 985             item = waiter.get()
+    986             waiter.clear()
+    987             if item is _NONE:
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in get(self)
+    937     def get(self):
+    938         if not self._values:
+--&gt; 939             Waiter.get(self)
+    940             Waiter.clear(self)
+    941 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in get(self)
+    897             self.greenlet = getcurrent()
+    898             try:
+--&gt; 899                 return self.hub.switch()
+    900             finally:
+    901                 self.greenlet = None
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in switch(self)
+    628         if switch_out is not None:
+    629             switch_out()
+--&gt; 630         return RawGreenlet.switch(self)
+    631 
+    632     def switch_out(self):
+
+LoopExit: (&apos;This operation would block forever&apos;, &lt;Hub at 0x627c048 select default pending=0 ref=0&gt;)</code></pre><h4 id="case3"><a href="#case3" class="headerlink" title="case3"></a>case3</h4><p>下面的case不同于case2，boss相当于并没有采用协程的概念，即使sleep了，也全部放入队列里之后，才会执行下面的消费者协程</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue</span><br><span class="line">tasks = Queue()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">(n)</span>:</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        task = tasks.get()</span><br><span class="line">        print(<span class="string">'Worker %s got task %s'</span> % (n, task))</span><br><span class="line">    print(<span class="string">'Quitting time!'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">25</span>):</span><br><span class="line">        <span class="keyword">if</span> i == <span class="number">10</span>:</span><br><span class="line">            gevent.sleep(<span class="number">10</span>)</span><br><span class="line">        tasks.put(i)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">boss()</span><br><span class="line"></span><br><span class="line">task_list = [</span><br><span class="line">    gevent.spawn(worker, <span class="string">'steve'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'john'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'nancy'</span>),</span><br><span class="line">]</span><br><span class="line">gevent.joinall(task_list)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Worker steve got task 1
+Worker steve got task 2
+Worker steve got task 3
+Worker steve got task 4
+Worker steve got task 5
+Worker steve got task 6
+Worker steve got task 7
+Worker steve got task 8
+Worker steve got task 9
+Worker steve got task 10
+Worker steve got task 11
+Worker steve got task 12
+Worker steve got task 13
+Worker steve got task 14
+Worker steve got task 15
+Worker steve got task 16
+Worker steve got task 17
+Worker steve got task 18
+Worker steve got task 19
+Worker steve got task 20
+Worker steve got task 21
+Worker steve got task 22
+Worker steve got task 23
+Worker steve got task 24
+
+
+---------------------------------------------------------------------------
+
+LoopExit                                  Traceback (most recent call last)
+
+&lt;ipython-input-8-e77d06944ce9&gt; in &lt;module&gt;()
+     26     gevent.spawn(worker, &apos;nancy&apos;),
+     27 ]
+---&gt; 28 gevent.joinall(task_list)
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\greenlet.pyc in joinall(greenlets, timeout, raise_error, count)
+    647     &quot;&quot;&quot;
+    648     if not raise_error:
+--&gt; 649         return wait(greenlets, timeout=timeout, count=count)
+    650 
+    651     done = []
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in wait(objects, timeout, count)
+   1036     if objects is None:
+   1037         return get_hub().join(timeout=timeout)
+-&gt; 1038     return list(iwait(objects, timeout, count))
+   1039 
+   1040 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in iwait(objects, timeout, count)
+    983 
+    984         for _ in xrange(count):
+--&gt; 985             item = waiter.get()
+    986             waiter.clear()
+    987             if item is _NONE:
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in get(self)
+    937     def get(self):
+    938         if not self._values:
+--&gt; 939             Waiter.get(self)
+    940             Waiter.clear(self)
+    941 
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in get(self)
+    897             self.greenlet = getcurrent()
+    898             try:
+--&gt; 899                 return self.hub.switch()
+    900             finally:
+    901                 self.greenlet = None
+
+C:\ProgramData\Anaconda2\lib\site-packages\gevent\hub.pyc in switch(self)
+    628         if switch_out is not None:
+    629             switch_out()
+--&gt; 630         return RawGreenlet.switch(self)
+    631 
+    632     def switch_out(self):
+
+LoopExit: (&apos;This operation would block forever&apos;, &lt;Hub at 0x627c048 select default pending=0 ref=0&gt;)</code></pre><h4 id="case4"><a href="#case4" class="headerlink" title="case4"></a>case4</h4><p>正确的退出方式应该是这样的！！！</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue</span><br><span class="line">tasks = Queue(maxsize=<span class="number">5</span>)</span><br><span class="line">Thread_SIZE = <span class="number">3</span></span><br><span class="line">            </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            task = tasks.get()</span><br><span class="line">            <span class="keyword">if</span> task == <span class="string">"stop"</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            print(<span class="string">'Worker got task %s'</span> % (task))</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">print</span> <span class="string">u"error : "</span> + str(e)</span><br><span class="line">    print(<span class="string">'Quitting time!'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">10</span>):</span><br><span class="line">        tasks.put(i)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(Thread_SIZE):</span><br><span class="line">        tasks.put(<span class="string">"stop"</span>)</span><br><span class="line">   </span><br><span class="line">task_list = list()</span><br><span class="line">task_list.append(gevent.spawn(boss))</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(Thread_SIZE):</span><br><span class="line">    task_list.append(gevent.spawn(worker))</span><br><span class="line">    </span><br><span class="line">gevent.joinall(task_list)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Worker got task 1
+Worker got task 2
+Worker got task 3
+Worker got task 4
+Worker got task 5
+Worker got task 6
+Worker got task 7
+Worker got task 8
+Worker got task 9
+Quitting time!
+Quitting time!
+Quitting time!
+
+
+
+
+[&lt;Greenlet at 0x652a210L&gt;,
+ &lt;Greenlet at 0x652a178L&gt;,
+ &lt;Greenlet at 0x652a2a8L&gt;,
+ &lt;Greenlet at 0x652a340L&gt;]</code></pre><h4 id="阻塞-put-nowait和get-nowait"><a href="#阻塞-put-nowait和get-nowait" class="headerlink" title="阻塞 put_nowait和get_nowait"></a>阻塞 put_nowait和get_nowait</h4><p>在操作不能完成时抛出gevent.queue.Empty或gevent.queue.Full异常</p>
+<h4 id="queue-最大长度"><a href="#queue-最大长度" class="headerlink" title="queue 最大长度"></a>queue 最大长度</h4><ul>
+<li>不设置Queue(maxsize=3)，在发送协程没有阻塞的时候，持续发送，直到完毕。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue, Empty</span><br><span class="line">tasks = Queue()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">(n)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            task = tasks.get(timeout=<span class="number">1</span>) <span class="comment"># decrements queue size by 1</span></span><br><span class="line">            print(<span class="string">'Worker %s got task %s'</span> % (n, task))</span><br><span class="line">            gevent.sleep(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">except</span> Empty:</span><br><span class="line">        print(<span class="string">'Quitting time!'</span>)</span><br><span class="line">        </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    Boss will wait to hand out work until a individual worker is</span></span><br><span class="line"><span class="string">    free since the maxsize of the task queue is 3.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">1</span>,<span class="number">10</span>):</span><br><span class="line">        tasks.put(i)</span><br><span class="line">        <span class="keyword">print</span> <span class="string">u"tasks size : "</span> + str(tasks.qsize())</span><br><span class="line">    print(<span class="string">'Assigned all work in iteration 1'</span>)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">10</span>,<span class="number">20</span>):</span><br><span class="line">        tasks.put(i)</span><br><span class="line">        <span class="keyword">print</span> <span class="string">u"tasks size : "</span> + str(tasks.qsize())</span><br><span class="line">    print(<span class="string">'Assigned all work in iteration 2'</span>)</span><br><span class="line">    </span><br><span class="line">gevent.joinall([</span><br><span class="line">    gevent.spawn(boss),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'steve'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'john'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'bob'</span>),</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<pre><code>tasks size : 1
+tasks size : 2
+tasks size : 3
+tasks size : 4
+tasks size : 5
+tasks size : 6
+tasks size : 7
+tasks size : 8
+tasks size : 9
+Assigned all work in iteration 1
+tasks size : 10
+tasks size : 11
+tasks size : 12
+tasks size : 13
+tasks size : 14
+tasks size : 15
+tasks size : 16
+tasks size : 17
+tasks size : 18
+tasks size : 19
+Assigned all work in iteration 2
+Worker steve got task 1
+Worker john got task 2
+Worker bob got task 3
+Worker steve got task 4
+Worker john got task 5
+Worker bob got task 6
+Worker steve got task 7
+Worker john got task 8
+Worker bob got task 9
+Worker steve got task 10
+Worker john got task 11
+Worker bob got task 12
+Worker steve got task 13
+Worker john got task 14
+Worker bob got task 15
+Worker steve got task 16
+Worker john got task 17
+Worker bob got task 18
+Worker steve got task 19
+Quitting time!
+Quitting time!
+Quitting time!
+
+
+
+
+[&lt;Greenlet at 0x1055f1690&gt;,
+ &lt;Greenlet at 0x1055f1870&gt;,
+ &lt;Greenlet at 0x1055f1f50&gt;,
+ &lt;Greenlet at 0x1055f12d0&gt;]</code></pre><ul>
+<li>设置Queue(maxsize=3)，当发送协程queue为3时，会暂停，交出控制权，让消费者去消耗，小于3时，再put.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.queue <span class="keyword">import</span> Queue, Empty</span><br><span class="line">tasks = Queue(maxsize=<span class="number">3</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">worker</span><span class="params">(n)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            task = tasks.get(timeout=<span class="number">10</span>) <span class="comment"># decrements queue size by 1</span></span><br><span class="line">            print(<span class="string">'Worker %s got task %s'</span> % (n, task))</span><br><span class="line">            gevent.sleep(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">except</span> Empty:</span><br><span class="line">        print(<span class="string">'Quitting time!'</span>)</span><br><span class="line">        </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">boss</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    Boss will wait to hand out work until a individual worker is</span></span><br><span class="line"><span class="string">    free since the maxsize of the task queue is 3.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">1</span>,<span class="number">10</span>):</span><br><span class="line">        tasks.put(i)</span><br><span class="line">        <span class="keyword">print</span> <span class="string">u"tasks size : "</span> + str(tasks.qsize())</span><br><span class="line">    print(<span class="string">'Assigned all work in iteration 1'</span>)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">10</span>,<span class="number">20</span>):</span><br><span class="line">        tasks.put(i)</span><br><span class="line">        <span class="keyword">print</span> <span class="string">u"tasks size : "</span> + str(tasks.qsize())</span><br><span class="line">    print(<span class="string">'Assigned all work in iteration 2'</span>)</span><br><span class="line">    </span><br><span class="line">gevent.joinall([</span><br><span class="line">    gevent.spawn(boss),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'steve'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'john'</span>),</span><br><span class="line">    gevent.spawn(worker, <span class="string">'bob'</span>),</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+
+<pre><code>tasks size : 1
+tasks size : 2
+tasks size : 3
+Worker steve got task 1
+Worker john got task 2
+Worker bob got task 3
+tasks size : 1
+tasks size : 2
+tasks size : 3
+Worker steve got task 4
+Worker john got task 5
+Worker bob got task 6
+tasks size : 1
+tasks size : 2
+tasks size : 3
+Assigned all work in iteration 1
+Worker steve got task 7
+Worker john got task 8
+Worker bob got task 9
+tasks size : 1
+tasks size : 2
+tasks size : 3
+Worker steve got task 10
+Worker john got task 11
+Worker bob got task 12
+tasks size : 1
+tasks size : 2
+tasks size : 3
+Worker steve got task 13
+Worker john got task 14
+Worker bob got task 15
+tasks size : 1
+tasks size : 2
+tasks size : 3
+Worker steve got task 16
+Worker john got task 17
+Worker bob got task 18
+tasks size : 1
+Assigned all work in iteration 2
+Worker steve got task 19
+Quitting time!
+Quitting time!
+Quitting time!
+
+
+
+
+[&lt;Greenlet at 0x1055f1410&gt;,
+ &lt;Greenlet at 0x1055e3c30&gt;,
+ &lt;Greenlet at 0x1055e3e10&gt;,
+ &lt;Greenlet at 0x1055e3550&gt;]</code></pre><h4 id="queue-timeout"><a href="#queue-timeout" class="headerlink" title="queue timeout"></a>queue timeout</h4><p>能够保证在get不到的10秒时间里，正常退出</p>
+<h3 id="组"><a href="#组" class="headerlink" title="组"></a>组</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.pool <span class="keyword">import</span> Group</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">talk</span><span class="params">(msg)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">3</span>):</span><br><span class="line">        print(msg)</span><br><span class="line">        </span><br><span class="line">g1 = gevent.spawn(talk, <span class="string">'bar'</span>)</span><br><span class="line">g2 = gevent.spawn(talk, <span class="string">'foo'</span>)</span><br><span class="line">g3 = gevent.spawn(talk, <span class="string">'fizz'</span>)</span><br><span class="line">group = Group()</span><br><span class="line">group.add(g1)</span><br><span class="line">group.add(g2)</span><br><span class="line"><span class="keyword">print</span> <span class="string">u"g1, g2 开始join"</span></span><br><span class="line">group.join()</span><br><span class="line">group.add(g3)</span><br><span class="line"><span class="keyword">print</span> <span class="string">u"g3 开始join"</span></span><br><span class="line">group.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>g1, g2 开始join
+bar
+bar
+bar
+foo
+foo
+foo
+fizz
+fizz
+fizz
+g3 开始join
+
+
+
+
+True</code></pre><h3 id="池"><a href="#池" class="headerlink" title="池"></a>池</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> gevent.pool <span class="keyword">import</span> Pool</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SocketPool</span><span class="params">(object)</span>:</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.pool = Pool(<span class="number">1000</span>)</span><br><span class="line">        self.pool.start()</span><br><span class="line">        </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">listen</span><span class="params">(self, socket)</span>:</span></span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            socket.recv()</span><br><span class="line">            </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_handler</span><span class="params">(self, socket)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.pool.full():</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">"At maximum pool size"</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            self.pool.spawn(self.listen, socket)</span><br><span class="line">            </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">shutdown</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.pool.kill()</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.pool <span class="keyword">import</span> Pool</span><br><span class="line">pool = Pool(<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello_from</span><span class="params">(n)</span>:</span></span><br><span class="line">    print(<span class="string">'Size of pool %s'</span> % len(pool))</span><br><span class="line">    </span><br><span class="line">pool.map(hello_from, xrange(<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Size of pool 2
+Size of pool 2
+Size of pool 1
+
+
+
+
+[None, None, None]</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> gevent</span><br><span class="line"><span class="keyword">from</span> gevent.threadpool <span class="keyword">import</span> ThreadPool</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_func</span><span class="params">(text, num)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> text, num</span><br><span class="line"> </span><br><span class="line">pool = ThreadPool(<span class="number">2</span>)</span><br><span class="line">start = time.time()</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">10</span>):</span><br><span class="line">    pool.spawn(my_func, <span class="string">"Hello"</span>, i)</span><br><span class="line">pool.join()</span><br><span class="line">delay = time.time() - start</span><br><span class="line">print(<span class="string">'Take %.3f seconds'</span> % delay)</span><br></pre></td></tr></table></figure>
+
+<pre><code>HelloHello  01
+
+Hello  Hello2 
+3Hello
+ Hello4 
+5Hello
+Take 0.013 seconds Hello
+6 
+7Hello
+  8Hello
+ 9</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> gevent.pool</span><br><span class="line"></span><br><span class="line">pool=gevent.pool.Pool(<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">func</span><span class="params">(n)</span>:</span></span><br><span class="line">    print(<span class="string">'Size of pool %s'</span> % len(pool))</span><br><span class="line">    <span class="keyword">print</span> n</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">10</span>):</span><br><span class="line">    pool.add(gevent.spawn(func,i))</span><br><span class="line"></span><br><span class="line">pool.join()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Size of pool 2
+0
+Size of pool 2
+1
+Size of pool 2
+2
+Size of pool 1
+3
+Size of pool 1
+4
+Size of pool 0
+5
+Size of pool 1
+6
+Size of pool 1
+7
+Size of pool 0
+8
+Size of pool 1
+9
+
+
+
+
+True</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/16/Python中的多进程和多进程/" rel="next" title="Python中的多进程和多进程">
+                <i class="fa fa-chevron-left"></i> Python中的多进程和多进程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/16/PCA推导/" rel="prev" title="PCA主成分分析法">
+                PCA主成分分析法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Gevent"><span class="nav-number">1.</span> <span class="nav-text">Gevent</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#不同的网络模型"><span class="nav-number">1.1.</span> <span class="nav-text">不同的网络模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协程"><span class="nav-number">1.2.</span> <span class="nav-text">协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gevent-1"><span class="nav-number">1.3.</span> <span class="nav-text">Gevent</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原理"><span class="nav-number">1.3.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#上下文切换"><span class="nav-number">1.3.2.</span> <span class="nav-text">上下文切换</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简单示例"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">简单示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#执行顺序示例代码"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">执行顺序示例代码</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生成greenlet"><span class="nav-number">1.3.3.</span> <span class="nav-text">生成greenlet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Greenlet-的状态"><span class="nav-number">1.3.4.</span> <span class="nav-text">Greenlet 的状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#终止程序"><span class="nav-number">1.3.5.</span> <span class="nav-text">终止程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#超时"><span class="nav-number">1.3.6.</span> <span class="nav-text">超时</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#猴子补丁"><span class="nav-number">1.3.7.</span> <span class="nav-text">猴子补丁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件"><span class="nav-number">1.3.8.</span> <span class="nav-text">事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#队列"><span class="nav-number">1.3.9.</span> <span class="nav-text">队列</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#阻塞put-get"><span class="nav-number">1.3.9.1.</span> <span class="nav-text">阻塞put/get</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#case1"><span class="nav-number">1.3.9.2.</span> <span class="nav-text">case1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#case2"><span class="nav-number">1.3.9.3.</span> <span class="nav-text">case2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#case3"><span class="nav-number">1.3.9.4.</span> <span class="nav-text">case3</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#case4"><span class="nav-number">1.3.9.5.</span> <span class="nav-text">case4</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#阻塞-put-nowait和get-nowait"><span class="nav-number">1.3.9.6.</span> <span class="nav-text">阻塞 put_nowait和get_nowait</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#queue-最大长度"><span class="nav-number">1.3.9.7.</span> <span class="nav-text">queue 最大长度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#queue-timeout"><span class="nav-number">1.3.9.8.</span> <span class="nav-text">queue timeout</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组"><span class="nav-number">1.3.10.</span> <span class="nav-text">组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#池"><span class="nav-number">1.3.11.</span> <span class="nav-text">池</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

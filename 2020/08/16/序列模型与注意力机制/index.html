@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="序列模型与注意力机制基础模型机器翻译（seq2seq）编码网络和解码网络 这是一个RNN的结构  首先，把法语输入一个RNN，能够得到一个向量。–编码网络 再把这个向量作为输入，输入一个RNN，得到输出的英文。–解码网络   图像描述(image2seq) 首先把图片输入一个CNN，得到一个向量。 再把这个向量作为输入，输入到一个RNN，得到图片对应的描述。   选择最可能的句子可以把机器翻译想象">
+<meta property="og:type" content="article">
+<meta property="og:title" content="吴恩达deep-learning序列模型-序列模型与注意力机制">
+<meta property="og:url" content="https://shenmadaxia.com/2020/08/16/序列模型与注意力机制/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="序列模型与注意力机制基础模型机器翻译（seq2seq）编码网络和解码网络 这是一个RNN的结构  首先，把法语输入一个RNN，能够得到一个向量。–编码网络 再把这个向量作为输入，输入一个RNN，得到输出的英文。–解码网络   图像描述(image2seq) 首先把图片输入一个CNN，得到一个向量。 再把这个向量作为输入，输入到一个RNN，得到图片对应的描述。   选择最可能的句子可以把机器翻译想象">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-26-072208.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-26-072248.png">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-09-30-075835.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-072718.png">
+<meta property="og:image" content="https://shenmadaxia.com/var/folders/bc/2lw168yd2w76klbbzb9fnkyc0000gn/T/abnerworks.Typora/image-20181002152527241.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-072205.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-085605.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-084032.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-084044.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-085211.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-072929.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-072902.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-072837.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-130121.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-130243.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-083053.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-124452.png">
+<meta property="og:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-132547.png">
+<meta property="og:updated_time" content="2020-08-16T05:38:09.501Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="吴恩达deep-learning序列模型-序列模型与注意力机制">
+<meta name="twitter:description" content="序列模型与注意力机制基础模型机器翻译（seq2seq）编码网络和解码网络 这是一个RNN的结构  首先，把法语输入一个RNN，能够得到一个向量。–编码网络 再把这个向量作为输入，输入一个RNN，得到输出的英文。–解码网络   图像描述(image2seq) 首先把图片输入一个CNN，得到一个向量。 再把这个向量作为输入，输入到一个RNN，得到图片对应的描述。   选择最可能的句子可以把机器翻译想象">
+<meta name="twitter:image" content="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-26-072208.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/08/16/序列模型与注意力机制/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>吴恩达deep-learning序列模型-序列模型与注意力机制 | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/08/16/序列模型与注意力机制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">吴恩达deep-learning序列模型-序列模型与注意力机制
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-08-16 13:38:09" itemprop="dateCreated datePublished" datetime="2020-08-16T13:38:09+08:00">2020-08-16</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="序列模型与注意力机制"><a href="#序列模型与注意力机制" class="headerlink" title="序列模型与注意力机制"></a>序列模型与注意力机制</h1><h2 id="基础模型"><a href="#基础模型" class="headerlink" title="基础模型"></a>基础模型</h2><h3 id="机器翻译（seq2seq）"><a href="#机器翻译（seq2seq）" class="headerlink" title="机器翻译（seq2seq）"></a>机器翻译（seq2seq）</h3><p>编码网络和解码网络</p>
+<p>这是一个RNN的结构</p>
+<ul>
+<li>首先，把法语输入一个RNN，能够得到一个向量。–编码网络</li>
+<li>再把这个向量作为输入，输入一个RNN，得到输出的英文。–解码网络</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-26-072208.png" alt></p>
+<h3 id="图像描述-image2seq"><a href="#图像描述-image2seq" class="headerlink" title="图像描述(image2seq)"></a>图像描述(image2seq)</h3><ul>
+<li>首先把图片输入一个CNN，得到一个向量。</li>
+<li>再把这个向量作为输入，输入到一个RNN，得到图片对应的描述。</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-08-26-072248.png" alt></p>
+<h2 id="选择最可能的句子"><a href="#选择最可能的句子" class="headerlink" title="选择最可能的句子"></a>选择最可能的句子</h2><p>可以把机器翻译想象成一个条件语言模型</p>
+<h3 id="贪心算法"><a href="#贪心算法" class="headerlink" title="贪心算法"></a>贪心算法</h3><p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-09-30-075835.png" alt></p>
+<p>贪心算法在预测的时候，把编码生成的向量进行输入，然后先预测出第一个位置上最大概率的一个词，再预测第二个位置上最大概率的词，依次。。</p>
+<p>这样的缺点是，仅仅是预测在第一个确定的情况下，第二个概率最大的词，这样虽然是概率最大的，但不一定是最好的。</p>
+<p>比方说:图片中明显第一个的翻译会比较好。但是第二个最可能会被生成。因为在法语中，going 跟在 Jane is 后面的概率要比 visiting 跟在Jane is 后面的概率要大。</p>
+<p>贪心算法的另外一个缺点是：</p>
+<p>假如，字典都10,000个词。而我们要预测10个词的句子。</p>
+<p>那么我们需要计算，10,000的10次方的概率，并从中挑选出概率最大的。这样会导致计算量过大。</p>
+<h2 id="定向搜索"><a href="#定向搜索" class="headerlink" title="定向搜索"></a>定向搜索</h2><h3 id="集束算法"><a href="#集束算法" class="headerlink" title="集束算法"></a>集束算法</h3><p>Beam Width ： for example, B = 3</p>
+<p>Beam Search 不会只选出概率最大的那一个，他会选出3个。</p>
+<p>当编码得到向量，输出第一个词的时候，选择概率最大的3个，而不是把10,000全部都保存下来。</p>
+<p>计算第二个词的时候，是基于前面的3个词分别计算后面的10000个的概率的。所以共30000个的概率，从中选择前3的概率，保存下来，去进行第三个词的预测。</p>
+<h2 id="改进定向搜索"><a href="#改进定向搜索" class="headerlink" title="改进定向搜索"></a>改进定向搜索</h2><p>Beam Search的目标就是最大化的字符相乘的概率，总是取前3个。</p>
+<p>最开始的时候，是采用下面的公式进行评价的：</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-072718.png" alt></p>
+<p>但是这样的问题在于，叠成的概率会非常的小，导致计算机在计算的时候4舌5入掉很多浮点数，所以取了对数，如下：</p>
+<p><img src="/var/folders/bc/2lw168yd2w76klbbzb9fnkyc0000gn/T/abnerworks.Typora/image-20181002152527241.png" alt="image-20181002152527241"></p>
+<p>但是这样也是有问题的，因为每个队概率都是非常的小，所以会导致，每多一个单词，概率都会小很多，所以在前面做了一个归一化的处理，并根据经验，给了一个参数用于调节归一化的程度，如下：</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-072205.png" alt></p>
+<h3 id="如何选择Beam-Width"><a href="#如何选择Beam-Width" class="headerlink" title="如何选择Beam Width"></a>如何选择Beam Width</h3><p>10</p>
+<h2 id="定向搜索的误差分析"><a href="#定向搜索的误差分析" class="headerlink" title="定向搜索的误差分析"></a>定向搜索的误差分析</h2><h3 id="如果Beam-Search出现错误怎么办？"><a href="#如果Beam-Search出现错误怎么办？" class="headerlink" title="如果Beam Search出现错误怎么办？"></a>如果Beam Search出现错误怎么办？</h3><p>如果结果不理想，如何确认这个误差是由于Beam Search没搜索出来，还是因为RNN模型有问题呢？</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-085605.png" alt></p>
+<p>解释：</p>
+<ul>
+<li>第一句：法语</li>
+<li>第二句 ：人工翻译的结果，作为Target</li>
+<li>第三句： 模型预测的Sequence</li>
+</ul>
+<p>Seq2Seq，是一个encoder和一个decoder，再加上Beam Search选出的Sequence。那么如果效果不理想，那么是RNN出了问题，还是Beam Search出了问题呢？</p>
+<h3 id="确定误差出现在哪里的方法"><a href="#确定误差出现在哪里的方法" class="headerlink" title="确定误差出现在哪里的方法"></a>确定误差出现在哪里的方法</h3><h4 id="第一种："><a href="#第一种：" class="headerlink" title="第一种："></a>第一种：</h4><p>相当于，Beam Search 选出了一个最大的Sequence，但是这个选出的最大的还没有target到大，这就表明，其实是target理应存在在所有的Beam Width里面的，但是没有被搜索出来，这就说明，是Beam Search出了问题。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-084032.png" alt></p>
+<h4 id="第二种："><a href="#第二种：" class="headerlink" title="第二种："></a>第二种：</h4><p>相当于，Beam Search已经选出了最大的概率的Sequence，当然正确的Target也是已经搜索出来了，只是在概率排名上，错误的比正确的高，这就说明Beam Search是生效的，但是RNN都模型是计算有偏差的。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-084044.png" alt></p>
+<h4 id="遍历并比较"><a href="#遍历并比较" class="headerlink" title="遍历并比较"></a>遍历并比较</h4><p>变量每一预测的Sequence，与Target进行比较。只有出现大量的Bean Search的问题，才需要调整Beam Search 的Beam Width。如果RNN出现的问题较多，就可以去调节RNN。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-02-085211.png" alt></p>
+<h2 id="Bleu-Score"><a href="#Bleu-Score" class="headerlink" title="Bleu Score"></a>Bleu Score</h2><p>Bilingual evaluation understudy(双语评估系统)</p>
+<p>p_1:一元词组</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-072929.png" alt></p>
+<p>p_2:二元词组</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-072902.png" alt></p>
+<p>公式：</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-072837.png" alt></p>
+<h2 id="注意力模型直观理解"><a href="#注意力模型直观理解" class="headerlink" title="注意力模型直观理解"></a>注意力模型直观理解</h2><p> 如果一个非常长的句子，需要把整个句子记住再进行翻译，效果不是很好。</p>
+<p>人类去翻译一段话，是一句一句翻译的，也就是一段话，从前往后根据上下文进行翻译的。</p>
+<p>注意力模型也是类似的概念。再进行翻译的时候，输入翻译到该词的附近的词的特征作为输入。</p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-130121.png" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-130243.png" alt></p>
+<h2 id="注意力模型"><a href="#注意力模型" class="headerlink" title="注意力模型"></a>注意力模型</h2><p>我来总结一下我的理解：</p>
+<ul>
+<li>encoder其实是针对输入的句子训练一个RNN模型，这个RNN模型一般是双向是LSTM之类的，那么每一个词，每一步都是有a的。</li>
+<li>训练一个另外的注意力模型，这个模型也是一个RNN。<ul>
+<li>这个RNN的输入有，S和C。</li>
+<li>S最开始为0向量。</li>
+<li>C为所有输入的词的a * 对这个词的注意力权重</li>
+<li>注意力权重的训练方法也是一个小型的神经网络<ul>
+<li>最后是一个softmax</li>
+<li>输入是改注意力模型该步的S和这个词的a</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-083053.png" alt></p>
+<p><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-124452.png" alt></p>
+<h2 id="语音辩识"><a href="#语音辩识" class="headerlink" title="语音辩识"></a>语音辩识</h2><ul>
+<li>注意力模型</li>
+<li>CTC损失函数 <ul>
+<li><img src="http://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2018-10-03-132547.png" alt></li>
+</ul>
+</li>
+</ul>
+<h2 id="触发字检测"><a href="#触发字检测" class="headerlink" title="触发字检测"></a>触发字检测</h2>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/16/机器学习算法之贝叶斯分类初探/" rel="next" title="机器学习算法之贝叶斯分类初探">
+                <i class="fa fa-chevron-left"></i> 机器学习算法之贝叶斯分类初探
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/16/机器学习中的PCA主成分分析/" rel="prev" title="机器学习中的PCA主成分分析">
+                机器学习中的PCA主成分分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#序列模型与注意力机制"><span class="nav-number">1.</span> <span class="nav-text">序列模型与注意力机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基础模型"><span class="nav-number">1.1.</span> <span class="nav-text">基础模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#机器翻译（seq2seq）"><span class="nav-number">1.1.1.</span> <span class="nav-text">机器翻译（seq2seq）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#图像描述-image2seq"><span class="nav-number">1.1.2.</span> <span class="nav-text">图像描述(image2seq)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#选择最可能的句子"><span class="nav-number">1.2.</span> <span class="nav-text">选择最可能的句子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#贪心算法"><span class="nav-number">1.2.1.</span> <span class="nav-text">贪心算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定向搜索"><span class="nav-number">1.3.</span> <span class="nav-text">定向搜索</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#集束算法"><span class="nav-number">1.3.1.</span> <span class="nav-text">集束算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#改进定向搜索"><span class="nav-number">1.4.</span> <span class="nav-text">改进定向搜索</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何选择Beam-Width"><span class="nav-number">1.4.1.</span> <span class="nav-text">如何选择Beam Width</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定向搜索的误差分析"><span class="nav-number">1.5.</span> <span class="nav-text">定向搜索的误差分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如果Beam-Search出现错误怎么办？"><span class="nav-number">1.5.1.</span> <span class="nav-text">如果Beam Search出现错误怎么办？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#确定误差出现在哪里的方法"><span class="nav-number">1.5.2.</span> <span class="nav-text">确定误差出现在哪里的方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#第一种："><span class="nav-number">1.5.2.1.</span> <span class="nav-text">第一种：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第二种："><span class="nav-number">1.5.2.2.</span> <span class="nav-text">第二种：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#遍历并比较"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">遍历并比较</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bleu-Score"><span class="nav-number">1.6.</span> <span class="nav-text">Bleu Score</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注意力模型直观理解"><span class="nav-number">1.7.</span> <span class="nav-text">注意力模型直观理解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注意力模型"><span class="nav-number">1.8.</span> <span class="nav-text">注意力模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#语音辩识"><span class="nav-number">1.9.</span> <span class="nav-text">语音辩识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#触发字检测"><span class="nav-number">1.10.</span> <span class="nav-text">触发字检测</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

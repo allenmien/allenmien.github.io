@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="SVM推导定义SVM的定义是在特征空间上间隔最大的线性分类器。 核函数，使它成为实质上的非线性分类器。 SVM的学习策略就是间隔最大化，形式化为求解一个凸二次规划问题，也等价于正则化的合页损失函数是最小化问题。 线性可分支持向量机假设给定一个特征空间上的训练数据集：$$T = {(x_1, y_1),(x_2,y_2),…,(x_N,y_N)}$$其中，$x\epsilon R^n, y_i \e">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SVM推导">
+<meta property="og:url" content="https://shenmadaxia.com/2020/08/16/SVM推导/index.html">
+<meta property="og:site_name" content="Mark写字的地方">
+<meta property="og:description" content="SVM推导定义SVM的定义是在特征空间上间隔最大的线性分类器。 核函数，使它成为实质上的非线性分类器。 SVM的学习策略就是间隔最大化，形式化为求解一个凸二次规划问题，也等价于正则化的合页损失函数是最小化问题。 线性可分支持向量机假设给定一个特征空间上的训练数据集：$$T = {(x_1, y_1),(x_2,y_2),…,(x_N,y_N)}$$其中，$x\epsilon R^n, y_i \e">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-02-070849.jpg">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-02-071157.jpg">
+<meta property="og:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-08-070205.jpg">
+<meta property="og:updated_time" content="2020-08-16T05:38:09.498Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SVM推导">
+<meta name="twitter:description" content="SVM推导定义SVM的定义是在特征空间上间隔最大的线性分类器。 核函数，使它成为实质上的非线性分类器。 SVM的学习策略就是间隔最大化，形式化为求解一个凸二次规划问题，也等价于正则化的合页损失函数是最小化问题。 线性可分支持向量机假设给定一个特征空间上的训练数据集：$$T = {(x_1, y_1),(x_2,y_2),…,(x_N,y_N)}$$其中，$x\epsilon R^n, y_i \e">
+<meta name="twitter:image" content="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-02-070849.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://shenmadaxia.com/2020/08/16/SVM推导/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>SVM推导 | Mark写字的地方</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mark写字的地方</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Mark Blog</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://shenmadaxia.com/2020/08/16/SVM推导/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mark">
+      <meta itemprop="description" content="一个写字的地方">
+      <meta itemprop="image" content="/images/1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mark写字的地方">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">SVM推导
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-08-16 13:38:09" itemprop="dateCreated datePublished" datetime="2020-08-16T13:38:09+08:00">2020-08-16</time>
+            </span>
+          
+
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="SVM推导"><a href="#SVM推导" class="headerlink" title="SVM推导"></a>SVM推导</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>SVM的定义是在特征空间上间隔最大的线性分类器。</p>
+<p>核函数，使它成为实质上的非线性分类器。</p>
+<p>SVM的学习策略就是间隔最大化，形式化为求解一个凸二次规划问题，也等价于正则化的合页损失函数是最小化问题。</p>
+<h2 id="线性可分支持向量机"><a href="#线性可分支持向量机" class="headerlink" title="线性可分支持向量机"></a>线性可分支持向量机</h2><p>假设给定一个特征空间上的训练数据集：<br>$$<br>T = {(x_1, y_1),(x_2,y_2),…,(x_N,y_N)}<br>$$<br>其中，$x\epsilon R^n, y_i \epsilon {+1, -1}, i=1,2,3…,N$ ，假设数据集是线性可分的。</p>
+<p>目标是在特征空间上，找到一个分隔超平面，能够将所有的点正确的分类。</p>
+<p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-02-070849.jpg" alt></p>
+<p>假设超平面为：<br>$$<br>\omega \cdot x + b = 0<br>$$</p>
+<h3 id="几何间隔"><a href="#几何间隔" class="headerlink" title="几何间隔"></a>几何间隔</h3><p>对于给定的训练数据集$T$中任意一个点$x_i$，到超平面$(w, b)$的几何间隔为：</p>
+<blockquote>
+<p>几何距离 = 点到超平面的距离*$y_i$</p>
+</blockquote>
+<p>$$<br>\gamma_i= y_i(\frac{w \cdot x_i + b}{||w||})<br>$$</p>
+<p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-02-071157.jpg" alt></p>
+<p>对于数据集$T$中所有的点中，到超平面的几何间隔的最小的值为：<br>$$<br>\gamma = \mathop{\min}<em>{i=1,….,N} \gamma_i = \min</em>{i=1,..N} y_i\frac{w \cdot x_i + b}{||w||}<br>$$</p>
+<h4 id="约束1"><a href="#约束1" class="headerlink" title="约束1"></a>约束1</h4><p>如果该平面能够把所有的数据点正确划分，那么：<br>$$<br>w \cdot x_i + b &gt; 0, y_i &gt; 0 \<br>w \cdot x_i + b &lt; 0, y_i &lt; 0<br>$$<br>也就是：<br>$$<br>y_i(w \cdot x_i + b) &gt; 0<br>$$</p>
+<h4 id="约束2"><a href="#约束2" class="headerlink" title="约束2"></a>约束2</h4><p>超平面参数$w, b$成比例的更改，不会影响几何间隔。此处为了推导方便，可以在<strong>距离超平面几何距离最近</strong>的这个点$x_i$上（<strong>Support Vector</strong>），让$w,  b$成比例的更改，使得$|y_i(w \cdot x_i + b) =1|$, 那么对于$r$就是在$x_i$这点上：</p>
+<blockquote>
+<p>可以理解：无论$w,b$如何成比例的更改，该超平面$w \cdot x + b =0$还是该超平面，所以点到超平面的几何距离不会变化</p>
+</blockquote>
+<p>$$<br>\gamma = \mathop{\min}_{i=1,….,N} \gamma_i = y_i\frac{w \cdot x_i + b}{||w||}<br>$$</p>
+<p>如果数据集被正确划分，那么$y_i(w \cdot x_i +b) &gt; 0$， 而且几何距离最小的点$x_i$，距离超平面的距离为$|y_i(w \cdot x_i + b) =1|$，也就是$y_i(w \cdot x_i +b) =1$。那么对于所有的点有$y_i(w \cdot x_i +b) &gt;=1$。那么：<br>$$<br>r = \min_{i=1,..N} \gamma_i = \frac{|y_i(w \cdot x_i + b) |}{||w||} =  \frac{1}{||w||}, \ \ \ \ \ \ \ y_i(w \cdot x_i + b) &gt;= 1<br>$$</p>
+<h3 id="间隔最大化"><a href="#间隔最大化" class="headerlink" title="间隔最大化"></a>间隔最大化</h3><p>我们需要最大化 该点到超平面的几何间隔$\gamma​$，即：<br>$$<br>\max r = \max \frac{1}{||w||} = \min \frac{1}{2} {||w||}^2<br>$$</p>
+<p>$$<br>y_i(w \cdot x_i + b) &gt;= 1<br>$$</p>
+<h3 id="拉格朗日求解"><a href="#拉格朗日求解" class="headerlink" title="拉格朗日求解"></a>拉格朗日求解</h3><h4 id="构造拉格朗日函数"><a href="#构造拉格朗日函数" class="headerlink" title="构造拉格朗日函数"></a>构造拉格朗日函数</h4><p>SVM的目标函数为，有多个不等式约束条件的优化为题，其拉格朗日函数可以写为：</p>
+$$
+L(\omega,b,\alpha) = \frac{{||w||^2}}{2} + \sum_{i=1}^{m}\alpha_i(1-y_i(\omega^Tx_i + b))
+$$
+<p>其中$\omega, b$为SVM待求的目标参数，$\alpha$为构建拉格朗日的参数。</p>
+<h4 id="对偶问题"><a href="#对偶问题" class="headerlink" title="对偶问题"></a>对偶问题</h4><p>现在的目标是：<br>$$<br>\min_{\omega,b}[\max_{\alpha:\alpha_j \ge 0}L(\omega,b,\alpha)]<br>$$<br>也就是保证每一个$\alpha \ge 0$的情况下，最小的$L(\omega, b, \alpha)$的$\omega, b$；</p>
+<p>转化为对偶问题：<br>$$<br>\max_{\alpha:\alpha \ge 0}[\min_{\omega,b}L(\omega,b,\alpha)]<br>$$</p>
+<h4 id="求解"><a href="#求解" class="headerlink" title="求解"></a>求解</h4><ol>
+<li>先求解$\min_{w, b}L(\omega,b,\alpha)$：</li>
+</ol>
+<p>$$<br>\min_{\omega,b}L(\omega,b,\alpha) = \min_{\omega, b}[\frac{1}{2}||w||^2 + \sum_{i=1}^{m}\alpha_i(1- y_i(\omega^Tx_i + b))]<br>$$</p>
+<p>分别对$\omega, b$求导：<br>$$<br>\frac{\partial L}{\partial \omega} = \omega - \sum_{i=1}^{m}\alpha_iy_ix_i = 0 \rightarrow \omega = \sum_{i=1}^{m}\alpha_iy_ix_i<br>$$</p>
+<p>$$<br>\frac{\partial L}{\partial b} = - \sum_{i=1}^{m}\alpha_iy_i = 0 \rightarrow \sum_{i=1}^{m}\alpha_iy_i = 0<br>$$</p>
+<p>代入拉格朗日函数：<br>$$<br>\min_{\omega,b} L(\omega, b, \alpha) = \frac{1}{2}\Big [\sum_{i=1}^{m}\alpha_iy_ix_i \Big]^T \Big[\sum_{i=1}^{m}\alpha_iy_ix_i\Big] + \sum_{i=1}^m \alpha_i - (\sum_{i=1}^{m}\alpha_ix_iy_i)(\sum_{j=1}^{m}\alpha_jy_jx_j^T) -\sum_{i=1}^{m}\alpha_i y_i b \ = \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_ix_iy_i\alpha_jy_jx_j^T+ \sum_{i=1}^m \alpha_i - \sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_ix_iy_i\alpha_jy_jx_j^T \= \sum_{i=1}^m \alpha_i - \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy_iy_jx_i^Tx_j<br>$$</p>
+<ol start="2">
+<li>求解$\max <em>{\alpha : \alpha \ge 0}\sum</em>{i=1}^m \alpha_i - \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy_iy_jx_i^Tx_j​$</li>
+</ol>
+<p>且：$\sum_{i=1}^{m}\alpha_iy_i = 0$<br>$$<br>N(\alpha_i, \alpha_j) = \sum_{i=1}^m \alpha_i - \frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy_iy_jx_i^Tx_j<br>$$<br>对$\alpha_i, \alpha_j$分别求导：<br>$$<br>\frac{\partial N}{\partial \alpha_j} = \sum_{i=1}^{m}\alpha_i-\frac{1}{2}\sum_{i=1}^{m}\alpha_iy_iy_jx_i^Tx_j = 0<br>$$</p>
+<p>$$<br>\frac{\partial N}{\partial \alpha_i} = -\frac{1}{2}\sum_{j=1}^{m}\alpha_jy_iy_jx_i^Tx_j = 0<br>$$</p>
+<p>可以分别求得$\alpha_i, \alpha_j$ ，把求得的$\alpha_i, \alpha_j$，带入$\omega = \sum_{i=1}^{m}\alpha_iy_ix_i$ ，就可以求得最大几何间隔的$\omega$了。</p>
+<h4 id="拉格朗日函数求解示例"><a href="#拉格朗日函数求解示例" class="headerlink" title="拉格朗日函数求解示例"></a>拉格朗日函数求解示例</h4><p>优化目标函数：<br>$$<br>\min_x f(x) = x_i^2 + x_j^2<br>$$<br>约束条件：<br>$$<br>h(x) = x_1 - x_2 -2 = 0<br>$$</p>
+<p>$$<br>g(x) = (x_1 -2)^2 + x_2^2 -1 \ge 0<br>$$</p>
+<p>构建拉格朗日函数：<br>$$<br>L(x,\alpha, \beta) = (x_1^2 + x_2^2) + \alpha(x_1 - x_2 -2) + \beta \Big[(x_1 -2)^2 + x_2^2 -1 \Big]<br>$$<br>先对$x_1, x_2$求导：<br>$$<br>\frac{\partial L}{\partial x_1} = 2x_1 + \alpha + 2 \beta (x_1-2) = 0 \rightarrow x_1 = \frac{4\beta -\alpha}{2\beta + 2}<br>$$</p>
+<p>$$<br>\frac{\partial L}{\partial x_2} = 2x_2 -  \alpha + 2\beta x_2 = 0 \rightarrow x_2 = \frac{\alpha}{2\beta +2}<br>$$</p>
+<p>带入$L(x,\alpha, \beta)$：<br>$$<br>L(x, \alpha, \beta) = - \frac{\alpha^2 + 4\alpha + 2\beta^2 -6\beta}{2\beta + 1}<br>$$<br>再分别对$\alpha, \beta$求导：<br>$$<br>\frac{\partial L}{\partial\alpha}<br>$$</p>
+<p>$$<br>\frac{\partial L}{\partial \beta}<br>$$</p>
+<p>得到：<br>$$<br>\alpha = -2, \beta = \sqrt{2} -1<br>$$<br>带入$x_1, x_2$得：<br>$$<br>x_1 = 2 - \frac{\sqrt{2}}{2} , x_2 = - \frac{\sqrt{2}}{2}<br>$$</p>
+<h2 id="软间隔和松弛变量"><a href="#软间隔和松弛变量" class="headerlink" title="软间隔和松弛变量"></a>软间隔和松弛变量</h2><p>前面的推导是基于数据是线性可分的，但是实际情况是，数据可能并不是线性可分到。</p>
+<p>但是这也分两种：第一种，数据点分布确实很复杂，需要通过核函数映射到高维空间，才能在高维空间可分；第二种，有一些噪点导致本来线性可分的数据，现在不可分了。</p>
+<p>解决第二种问题点办法就是引入松弛变量。</p>
+<p><img src="https://markdocpicture.oss-cn-hangzhou.aliyuncs.com/iPic/2019-04-08-070205.jpg" alt></p>
+<p>图中蓝色的点就是噪音，导致本可以分开的数据点，现在不可分了。</p>
+<p>我们之前线性可分的约束条件为：<br>$$<br>y_i(w^T x_i + b) \ge 1<br>$$<br>现在我们给他加一个松弛变量：<br>$$<br>y_i(w^T x_i + b) \ge 1 - \xi_i<br>$$<br>同样，目标函数变为:<br>$$<br>\min \frac{1}{2}||w||^2 + C\sum_{i=1}^{n}\xi_i<br>$$<br>拉格朗日函数为:<br>$$<br>L(\omega, b, \xi, \alpha, r) = \frac{1}{2}||w||^2 + C\sum_{i=1}^{n}\xi_i - \sum_{i=1}^{n}\alpha_i(y_i(\omega^Tx_i + b) - 1 + \xi_i) - \sum_{i=1}{n}r_i\xi_i<br>$$<br>同样对$\omega, b, \xi$求导：<br>$$<br>\frac{\partial L}{\partial \omega} = 0 \to \omega = \sum_i^{n}\alpha_ix_iy_i<br>$$</p>
+<p>$$<br>\frac{\partial L}{\partial b} = 0 \to \sum_{i=1}^{n}\alpha_iy_i = 0<br>$$</p>
+<p>$$<br>\frac{\partial L}{\partial \xi_i} = 0  \to  C-\alpha_i -r_i = 0<br>$$</p>
+<p>带入L得：<br>$$<br>L(\omega, b, \xi, \alpha, r) = \sum_{i=1}^{n}\alpha_i -\frac{1}{2}\alpha_i\alpha_jy_iy_j&lt;x_i,x_j&gt;<br>$$</p>
+<p>$$<br>0 \le \alpha_i \le C, i =1,…n<br>$$</p>
+<p>$$<br>\sum_{i=1}^{n}\alpha_iy_i = 0<br>$$</p>
+<p>其中C为控制”寻找margin最大的超平面”和”保证数据点偏差最小”之间的权重，自己定义。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/16/PCA推导/" rel="next" title="PCA主成分分析法">
+                <i class="fa fa-chevron-left"></i> PCA主成分分析法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/16/Simhash/" rel="prev" title="Simhash">
+                Simhash <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="gitalk-container">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/1.jpg" alt="Mark">
+            
+              <p class="site-author-name" itemprop="name">Mark</p>
+              <div class="site-description motion-element" itemprop="description">一个写字的地方</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">33</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#SVM推导"><span class="nav-number">1.</span> <span class="nav-text">SVM推导</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#定义"><span class="nav-number">1.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线性可分支持向量机"><span class="nav-number">1.2.</span> <span class="nav-text">线性可分支持向量机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#几何间隔"><span class="nav-number">1.2.1.</span> <span class="nav-text">几何间隔</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#约束1"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">约束1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#约束2"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">约束2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#间隔最大化"><span class="nav-number">1.2.2.</span> <span class="nav-text">间隔最大化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#拉格朗日求解"><span class="nav-number">1.2.3.</span> <span class="nav-text">拉格朗日求解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#构造拉格朗日函数"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">构造拉格朗日函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对偶问题"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">对偶问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#求解"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">求解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#拉格朗日函数求解示例"><span class="nav-number">1.2.3.4.</span> <span class="nav-text">拉格朗日函数求解示例</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#软间隔和松弛变量"><span class="nav-number">1.3.</span> <span class="nav-text">软间隔和松弛变量</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mark</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.2.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+
+
+<script src="//cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'cfa36d892cb8f0b06e9b',
+    clientSecret: '472a26d3ace13bc134580b4260988f66247e127c',
+    repo: 'allenmien.github.io',
+    owner: 'allenmien',
+    admin: ['allenmien'],
+    id: md5(location.pathname),
+    
+      language: window.navigator.language || window.navigator.userLanguage,
+    
+    distractionFreeMode: 'true'
+  });
+  gitalk.render('gitalk-container');
+</script>
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+<script>
+if ($('body').find('div.pdf').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      $('body').find('div.pdf').each(function(i, o) {
+        PDFObject.embed($(o).attr('target'), $(o), {
+          pdfOpenParams: {
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            pagemode: 'thumbs',
+            view: 'FitH'
+          },
+          PDFJS_URL: '/lib/pdf/web/viewer.html',
+          height: $(o).attr('height') || '500px'
+        });
+      });
+    },
+  });
+}
+</script>
+
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
